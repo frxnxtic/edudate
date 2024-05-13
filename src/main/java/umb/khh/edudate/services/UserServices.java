@@ -5,7 +5,6 @@ import umb.khh.edudate.entity.User;
 import org.springframework.stereotype.Service;
 import umb.khh.edudate.dto.UserDTO;
 import umb.khh.edudate.exception.DuplicateUsernameException;
-import umb.khh.edudate.exception.InvalidUserDataException;
 import umb.khh.edudate.exception.UserNotFoundException;
 import umb.khh.edudate.repositories.UserRepository;
 import java.util.List;
@@ -29,7 +28,7 @@ public class UserServices {
         user.setEmail(userDTO.getEmail());
         user.setPasswordHash(userDTO.getPasswordHash());
       //user.getFaculty(userDTO.getFaculty());
-        user.setInterest(userDTO.getInterest());
+      //user.setInterest(userDTO.getInterest());
         user.setProfileDescription(userDTO.getProfileDescription());
 
         return userRepository.save(user);
@@ -54,7 +53,7 @@ public class UserServices {
     }
 
 
-    public  User findRandomUser() {
+    public User findRandomUser() {
         List<User> allUsers = userRepository.findAll();
         Random random = new Random();
         int randomIndex = random.nextInt(allUsers.size());

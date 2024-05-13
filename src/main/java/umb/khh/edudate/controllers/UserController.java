@@ -1,19 +1,33 @@
 package umb.khh.edudate.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import umb.khh.edudate.dto.UserDTO;
 import umb.khh.edudate.entity.User;
-import org.springframework.web.bind.annotation.*;
 import umb.khh.edudate.exception.UserNotFoundException;
 import umb.khh.edudate.services.UserServices;
 import java.util.Calendar;
 import java.util.Date;
 
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequestMapping("/api")
 public class UserController {
+    @Autowired
     private final UserServices userService;
     public UserController(UserServices userService) {
         this.userService = userService;
@@ -46,7 +60,7 @@ public class UserController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity deleteUser(@PathVariable Long id) {
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.ok().build();
@@ -73,7 +87,7 @@ public class UserController {
         user.setFaculty("FPV");
         user.setPasswordHash("1234567890");
         String[] interests = {"hello", "world"};
-        user.setInterest(interests);
+        //user.setInterest(interests);
 
         return user;
     }

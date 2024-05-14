@@ -35,8 +35,8 @@ public class UserServices {
     }
 
     public User createUser(User user) {
-        if (userRepository.existsByUsername(user.getUserName())) {
-            throw new DuplicateUsernameException("Username " + user.getUserName() + " is already taken");
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new DuplicateUsernameException("Username " + user.getUsername() + " is already taken");
         }
 
         return userRepository.save(user);

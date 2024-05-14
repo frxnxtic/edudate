@@ -18,7 +18,7 @@ public class User {
     @Id @GeneratedValue
     private Long id;
     @Column(name = "username")
-    private String userName;
+    private String username;
     @Column(name = "password")
     private String passwordHash;
     @Column(name = "email")
@@ -31,8 +31,8 @@ public class User {
     private String surname;
     @Column(name = "city")
     private String city;
-    @Column(name = "like")
-    private int like;
+    @Column(name = "likes")
+    private short like;
     @Column(name = "faculta")
     private String faculty;
     @Column(name = "description")

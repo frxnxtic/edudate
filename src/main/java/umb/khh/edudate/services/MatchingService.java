@@ -7,7 +7,7 @@ import umb.khh.edudate.entity.User;
 import umb.khh.edudate.repositories.MatchingRepository;
 import umb.khh.edudate.repositories.UserRepository;
 
-import java.util.Date;
+import java.sql.Time;
 import java.util.List;
 
 @Service
@@ -20,7 +20,7 @@ public class MatchingService {
     private UserRepository userRepository;
 
     public Matching saveMatching(Matching matching) {
-        matching.setMatchedAt(new Date());
+        matching.setMatchedAt(new Time(System.currentTimeMillis()));
         return matchingRepository.save(matching);
     }
 

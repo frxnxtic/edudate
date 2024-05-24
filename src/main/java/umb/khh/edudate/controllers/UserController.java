@@ -17,13 +17,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import umb.khh.edudate.dto.UserDTO;
+import umb.khh.edudate.entity.Interest;
 import umb.khh.edudate.entity.User;
 import umb.khh.edudate.exception.UserNotFoundException;
 import umb.khh.edudate.services.UserServices;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -49,9 +52,9 @@ public class UserController {
         return "userRating";
     }
 
-    @GetMapping("/random")
-    public ResponseEntity<User> getRandomUser() {
-        User randomUser = userService.findRandomUser();
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getRandomUser(@PathVariable Long id) {
+        User randomUser = userService.getUserById(id);
         if (randomUser != null) {
             return ResponseEntity.ok(randomUser);
         } else {
@@ -77,19 +80,40 @@ public class UserController {
     public User getMyProfile() {
         // Создание фиктивного пользователя
         User user = new User();
+        user.setUsername("ahfeiu0");
         user.setName("Artem");
         user.setSurname("Haidosh");
         user.setEmail("artemhaydosh@gmail.com");
         Date dateOfBirthday = new Date(2005, Calendar.AUGUST, 28);
         user.setDateOfBirth(dateOfBirthday);
-        user.setId(1L);
         user.setProfileDescription("Я курю, дрошу, матюгаюся...");
         user.setFaculty("FPV");
         user.setPasswordHash("1234567890");
-        String[] interests = {"hello", "world"};
-        //user.setInterest(interests);
 
+        Set<Interest> interests = new HashSet<>();
+        interests.add(Interest.SPORT);
+        interests.add(Interest.MUSIC);
+        interests.add(Interest.TRAVEL);
+        interests.add(Interest.FASHION);
+        interests.add(Interest.READING);
+        //interests.add(Interest.GAMING);
+
+        user.setInterests(interests);
+
+        userService.createUser(user);
         return user;
+    }
+
+    @GetMapping("/users/{id}/likes")
+    public ResponseEntity<Set<User>> getUsersWhoLikedMe(@PathVariable Long id) {
+        Set<User> likedByUsers = userService.getUsersWhoLikedMe(id);
+        return ResponseEntity.ok(likedByUsers);
+    }
+
+    @PostMapping("/users/{id}/like")
+    public ResponseEntity<User> likeUser(@PathVariable Long id, @RequestParam Long likedUserId) {
+        User likedUser = userService.likeUser(id, likedUserId);
+        return ResponseEntity.ok(likedUser);
     }
 
 }

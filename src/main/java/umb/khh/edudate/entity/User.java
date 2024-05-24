@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Date;
 
 @Getter
@@ -39,6 +41,27 @@ public class User {
     private String profileDescription;
     @Column(name = "social_links")
     private String social_links;
-//    @Column(name = "username")
-//    private String[] interest;
+//ДОБАВИТЬ КОЛОНКУ ДИЗЛАЙКОВ
+    @Column(name = "dislikes")
+    private int dislikes;
+
+    //@Column(name = "interests")
+    @ElementCollection(targetClass = Interest.class)
+    @Enumerated(EnumType.STRING)
+    private Set<Interest> interests = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_likes",
+            joinColumns = @JoinColumn(name = "liked_user_id"),
+            inverseJoinColumns = @JoinColumn(name = "liker_user_id")
+    )
+
+    private Set<User> likedBy;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<Image> images;
 }
+
+
+

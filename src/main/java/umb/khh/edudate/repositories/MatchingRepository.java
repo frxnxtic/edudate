@@ -1,4 +1,4 @@
-package umb.khh.edudate.repository;
+package umb.khh.edudate.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import umb.khh.edudate.entity.Matching;

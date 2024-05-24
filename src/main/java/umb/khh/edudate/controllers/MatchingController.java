@@ -21,9 +21,9 @@ public class MatchingController {
     @Autowired
     private final UserServices userService;
 
-    public MatchingController(MatchingService matchingService, UserServices userServices) {
+    public MatchingController(MatchingService matchingService, UserServices userService) {
         this.matchingService = matchingService;
-        this.userService = userServices;
+        this.userService = userService;
     }
 
     @PostMapping("/create")

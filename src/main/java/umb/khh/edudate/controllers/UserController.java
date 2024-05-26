@@ -21,10 +21,8 @@ import umb.khh.edudate.entity.Interest;
 import umb.khh.edudate.entity.User;
 import umb.khh.edudate.exception.UserNotFoundException;
 import umb.khh.edudate.services.UserServices;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.*;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -114,6 +112,16 @@ public class UserController {
     public ResponseEntity<User> likeUser(@PathVariable Long id, @RequestParam Long likedUserId) {
         User likedUser = userService.likeUser(id, likedUserId);
         return ResponseEntity.ok(likedUser);
+    }
+
+    @GetMapping("/{userId}/matches")
+    public ResponseEntity<List<User>> getMatchingUsers(@PathVariable Long userId) {
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        List<User> matchingUsers = userService.findUsersByCommonInterests(user);
+        return ResponseEntity.ok(matchingUsers);
     }
 
 }

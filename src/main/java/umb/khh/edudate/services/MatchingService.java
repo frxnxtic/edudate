@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import umb.khh.edudate.entity.Matching;
 import umb.khh.edudate.entity.User;
 import umb.khh.edudate.repositories.MatchingRepository;
-import umb.khh.edudate.repositories.UserRepository;
 
 import java.sql.Time;
 import java.util.List;
@@ -15,9 +14,6 @@ public class MatchingService {
 
     @Autowired
     private MatchingRepository matchingRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     public Matching saveMatching(Matching matching) {
         matching.setMatchedAt(new Time(System.currentTimeMillis()));
@@ -30,5 +26,14 @@ public class MatchingService {
 
     public List<Matching> getUserMatchedBy(User matchedUser) {
         return matchingRepository.findByMatchedUser(matchedUser);
+    }
+
+    public Matching createMatching(User user, User matchedUser, boolean liked) {
+        Matching matching = new Matching();
+        matching.setUser(user);
+        matching.setMatchedUser(matchedUser);
+        matching.setSeen(false);
+        matching.setLiked(liked);
+        return saveMatching(matching);
     }
 }

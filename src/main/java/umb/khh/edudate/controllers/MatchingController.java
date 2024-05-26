@@ -10,7 +10,7 @@ import umb.khh.edudate.services.UserServices;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/matching")
 public class MatchingController {
@@ -35,14 +35,8 @@ public class MatchingController {
             return ResponseEntity.notFound().build();
         }
 
-        Matching matching = new Matching();
-        matching.setUser(user);
-        matching.setMatchedUser(matchedUser);
-        matching.setSeen(false); // Initially, the match is not seen
-        matching.setLiked(liked);
-
-        Matching savedMatching = matchingService.saveMatching(matching);
-        return ResponseEntity.ok(savedMatching);
+        Matching matching = matchingService.createMatching(user, matchedUser, liked);
+        return ResponseEntity.ok(matching);
     }
 
     @GetMapping("/user/{userId}")

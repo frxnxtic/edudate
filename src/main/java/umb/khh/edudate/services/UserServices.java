@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
 import umb.khh.edudate.dto.LoginDTO;
 import umb.khh.edudate.dto.SignupDTO;
+import umb.khh.edudate.entity.Interest;
 import umb.khh.edudate.entity.User;
 import org.springframework.stereotype.Service;
 import umb.khh.edudate.dto.UserDTO;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServices {
@@ -141,5 +143,17 @@ public class UserServices {
 
         User savedUser = userRepository.save(userEntity);
         return userMapper.toUserDTO(savedUser);
+    }
+
+    public List<User> findUsersByCommonInterests(User user) {
+        Set<Interest> userInterests = user.getInterests();
+        return userRepository.findAll().stream()
+                .filter(otherUser -> !otherUser.getId().equals(user.getId()))
+                .sorted((u1, u2) -> {
+                    long commonInterests1 = u1.getInterests().stream().filter(userInterests::contains).count();
+                    long commonInterests2 = u2.getInterests().stream().filter(userInterests::contains).count();
+                    return Long.compare(commonInterests2, commonInterests1);
+                })
+                .collect(Collectors.toList());
     }
 }

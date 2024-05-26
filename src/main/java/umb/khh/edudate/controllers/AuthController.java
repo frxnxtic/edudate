@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import umb.khh.edudate.dto.LoginDTO;
+import umb.khh.edudate.dto.SignupDTO;
 import umb.khh.edudate.dto.UserDTO;
 import umb.khh.edudate.security.AuthProvider;
 import umb.khh.edudate.services.UserServices;
@@ -29,8 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserDTO> signup(@RequestBody UserDTO userDTO) {
-        UserDTO user = service.signup(userDTO);
+    public ResponseEntity<UserDTO> signup(@RequestBody SignupDTO userDTO) {
+        UserDTO user = service.register(userDTO);
         return ResponseEntity.ok(user);
     }
 }

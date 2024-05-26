@@ -88,7 +88,7 @@ public class UserController {
         user.setDateOfBirth(dateOfBirthday);
         user.setProfileDescription("Я курю, дрошу, матюгаюся...");
         user.setFaculty("FPV");
-        user.setPasswordHash("1234567890");
+        user.setPassword("1234567890");
 
         Set<Interest> interests = new HashSet<>();
         interests.add(Interest.SPORT);

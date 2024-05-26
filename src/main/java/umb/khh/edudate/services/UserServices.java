@@ -1,13 +1,21 @@
 package umb.khh.edudate.services;
 
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
+import umb.khh.edudate.dto.LoginDTO;
+import umb.khh.edudate.dto.SignupDTO;
 import umb.khh.edudate.entity.User;
 import org.springframework.stereotype.Service;
 import umb.khh.edudate.dto.UserDTO;
 import umb.khh.edudate.exception.DuplicateUsernameException;
 import umb.khh.edudate.exception.UserNotFoundException;
 import umb.khh.edudate.repositories.UserRepository;
+import umb.khh.edudate.security.AuthProvider;
+
+import java.nio.CharBuffer;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -16,6 +24,15 @@ import java.util.Set;
 @Service
 public class UserServices {
     private final UserRepository userRepository;
+
+    @Autowired
+    private AuthProvider userAuthProvider;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UserServices(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -29,9 +46,9 @@ public class UserServices {
         user.setSurname(userDTO.getSurname());
         user.setDateOfBirth(userDTO.getDateOfBirth());
         user.setEmail(userDTO.getEmail());
-        user.setPasswordHash(userDTO.getPasswordHash());
+        user.setPassword(userDTO.getPassword());
         user.setFaculty(userDTO.getFaculty());
-      //user.setInterest(userDTO.getInterest());
+        //user.setInterest(userDTO.getInterest());
         user.setProfileDescription(userDTO.getProfileDescription());
 
         return userRepository.save(user);
@@ -39,7 +56,7 @@ public class UserServices {
 
     public User createUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new DuplicateUsernameException("Username " + user.getUsername() + " is already taken");
+            throw new DuplicateUsernameException("Username " + user.getUsername() + " is already taken", HttpStatus.BAD_REQUEST);
         }
 
         return userRepository.save(user);
@@ -86,16 +103,43 @@ public class UserServices {
     public User updateUser(@RequestBody User user) {
         User newUser = new User();
 
-        user.setName(user.getName());
-        user.setSurname(user.getSurname());
-        user.setDateOfBirth(user.getDateOfBirth());
-        user.setEmail(user.getEmail());
-        user.setPasswordHash(user.getPasswordHash());
-        user.setFaculty(user.getFaculty());
+        newUser.setName(user.getName());
+        newUser.setSurname(user.getSurname());
+        newUser.setDateOfBirth(user.getDateOfBirth());
+        newUser.setEmail(user.getEmail());
+        newUser.setPassword(user.getPassword());
+        newUser.setFaculty(user.getFaculty());
         //user.setInterest(userDTO.getInterest());
-        user.setProfileDescription(user.getProfileDescription());
+        newUser.setProfileDescription(user.getProfileDescription());
 
-        return userRepository.save(user);
+        return userRepository.save(newUser);
 
+    }
+
+    public UserDTO login(LoginDTO loginDTO) {
+        User user = userRepository.findByUsername(loginDTO.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (passwordEncoder.matches(CharBuffer.wrap(loginDTO.password()), user.getPassword())) {
+            String token = userAuthProvider.createJWTToken(user);
+            user.setToken(token);
+            User saved = userRepository.save(user);
+            return userMapper.toUserDTO(saved);
+        } else {
+            throw new UserNotFoundException("User not found");
+        }
+    }
+
+    public UserDTO register(SignupDTO signUpDTO) {
+        Optional<User> user = userRepository.findByUsername(signUpDTO.username());
+
+        if (user.isPresent()) {
+            throw new DuplicateUsernameException("Username already exists", HttpStatus.BAD_REQUEST);
+        }
+
+        User userEntity = userMapper.signUpToUser(signUpDTO);
+        userEntity.setPassword(passwordEncoder.encode(CharBuffer.wrap(signUpDTO.password())));
+
+        User savedUser = userRepository.save(userEntity);
+        return userMapper.toUserDTO(savedUser);
     }
 }

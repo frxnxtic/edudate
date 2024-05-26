@@ -22,7 +22,9 @@ public class User {
     @Column(name = "username")
     private String username;
     @Column(name = "password")
-    private String passwordHash;
+    private String password;
+    @Column(name = "token")
+    private String token;
     @Column(name = "email")
     private String email;
     @Column(name = "dob")

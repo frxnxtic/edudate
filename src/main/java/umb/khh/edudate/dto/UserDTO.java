@@ -4,13 +4,9 @@ import lombok.*;
 
 import java.util.Date;
 
-@Getter
 @Builder
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class UserDTO {
-
     private String username;
     private String name;
     private String surname;

@@ -1,7 +1,9 @@
 package umb.khh.edudate.services;
 
 import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +36,9 @@ public class UserServices {
     private UserMapper userMapper;
 
     @Autowired
+    ModelMapper modelMapper;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     public UserServices(UserRepository userRepository) {
@@ -41,9 +46,14 @@ public class UserServices {
     }
 
 
+    public UserDTO convertToDTO(User userEntity) {
+        return modelMapper.map(userEntity, UserDTO.class);
+    }
+
     public User registerUser(UserDTO userDTO) {
         User user = new User();
 
+        user.setUsername(userDTO.getUsername());
         user.setName(userDTO.getName());
         user.setSurname(userDTO.getSurname());
         user.setDateOfBirth(userDTO.getDateOfBirth());
@@ -119,11 +129,13 @@ public class UserServices {
     }
 
     public UserDTO login(LoginDTO loginDTO) {
-        User user = userRepository.findByUsername(loginDTO.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findByUsername(loginDTO.username()).orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (passwordEncoder.matches(CharBuffer.wrap(loginDTO.password()), user.getPassword())) {
             String token = userAuthProvider.createJWTToken(user);
             user.setToken(token);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + user.getToken());
             User saved = userRepository.save(user);
             return userMapper.toUserDTO(saved);
         } else {
@@ -138,11 +150,24 @@ public class UserServices {
             throw new DuplicateUsernameException("Username already exists", HttpStatus.BAD_REQUEST);
         }
 
-        User userEntity = userMapper.signUpToUser(signUpDTO);
+        User userEntity = new User();
+        userEntity.setUsername(signUpDTO.username());
+        userEntity.setName(signUpDTO.name());
+        userEntity.setSurname(signUpDTO.surname());
+        userEntity.setDateOfBirth(signUpDTO.dateOfBirth());
+        userEntity.setEmail(signUpDTO.email());
+        userEntity.setFaculty(signUpDTO.faculty());
+        userEntity.setProfileDescription(signUpDTO.profileDescription());
+
         userEntity.setPassword(passwordEncoder.encode(CharBuffer.wrap(signUpDTO.password())));
 
         User savedUser = userRepository.save(userEntity);
-        return userMapper.toUserDTO(savedUser);
+        String token = userAuthProvider.createJWTToken(savedUser);
+        savedUser.setToken(token);
+        User updatedUser = userRepository.save(savedUser);
+
+
+        return userMapper.toUserDTO(updatedUser);
     }
 
     public List<User> findUsersByCommonInterests(User user) {

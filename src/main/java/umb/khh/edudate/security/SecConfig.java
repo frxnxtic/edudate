@@ -24,11 +24,11 @@ public class SecConfig {
                 .addFilterBefore(new JWTFilter(authProvider), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) ->
-                    requests.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/user").permitAll()
-                            .anyRequest().authenticated()
-                        );
+                        requests.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/user").permitAll()
+                                .anyRequest().authenticated()
+                );
         return http.build();
     }
 }

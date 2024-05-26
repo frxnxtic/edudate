@@ -22,8 +22,7 @@ import com.auth0.jwt.JWT;
 @Component
 public class AuthProvider {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+    private String secretKey = "KHH - Best team ever";
 
     @PostConstruct
     public void init() {
@@ -33,6 +32,13 @@ public class AuthProvider {
     public String createJWTToken(User user) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + 3600000);
+
+        System.out.println(JWT.create().
+                withIssuer(user.getUsername()).
+                withIssuedAt(now).
+                withExpiresAt(validity).
+                withIssuer("username:" + user.getUsername()).
+                sign(Algorithm.HMAC256(secretKey)));
 
         return JWT.create().
                 withIssuer(user.getUsername()).

@@ -132,7 +132,7 @@ public class UserServices {
     public UserDTO register(SignupDTO signUpDTO) {
         Optional<User> user = userRepository.findByUsername(signUpDTO.username());
 
-        if (user.isPresent()) {
+        if (user.isPresent())  {
             throw new DuplicateUsernameException("Username already exists", HttpStatus.BAD_REQUEST);
         }
 

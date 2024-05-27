@@ -5,8 +5,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.RequestBody;
 import umb.khh.edudate.dto.LoginDTO;
 import umb.khh.edudate.dto.SignupDTO;
 import umb.khh.edudate.entity.Interest;
@@ -74,6 +74,38 @@ public class UserServices {
         return userRepository.save(user);
     }
 
+    public UserDTO updateUser(UserDTO userDTO) {
+        System.out.println(userRepository.findByUsername(userDTO.getUsername()).stream().findFirst());
+        User user = userRepository.findByUsername(userDTO.getUsername()).stream().findFirst().orElseThrow(() -> new UserNotFoundException("User not found with id: "  + userDTO.getUsername()));
+
+        // Update user details if the new value is not null
+        if (userDTO.getName() != null) {
+            user.setName(userDTO.getName());
+        }
+        if (userDTO.getSurname() != null) {
+            user.setSurname(userDTO.getSurname());
+        }
+        if (userDTO.getDateOfBirth() != null) {
+            user.setDateOfBirth(userDTO.getDateOfBirth());
+        }
+        if (userDTO.getFaculty() != null) {
+            user.setFaculty(userDTO.getFaculty());
+        }
+        if (userDTO.getProfileDescription() != null) {
+            user.setProfileDescription(userDTO.getProfileDescription());
+        }
+
+        // Save updated user to the database
+        User updatedUser = userRepository.save(user);
+
+        // Convert updated user entity to DTO and return
+        return userMapper.toUserDTO(null);
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+    }
+
     // Метод для удаления пользователя по ID
     @Transactional
     public void deleteUser(Long id) throws UserNotFoundException {
@@ -112,38 +144,35 @@ public class UserServices {
         return user.orElse(null);
     }
 
-    public User updateUser(@RequestBody User user) {
-        User newUser = new User();
-
-        newUser.setName(user.getName());
-        newUser.setSurname(user.getSurname());
-        newUser.setDateOfBirth(user.getDateOfBirth());
-        newUser.setEmail(user.getEmail());
-        newUser.setPassword(user.getPassword());
-        newUser.setFaculty(user.getFaculty());
-        //user.setInterest(userDTO.getInterest());
-        newUser.setProfileDescription(user.getProfileDescription());
-
-        return userRepository.save(newUser);
-
+    public UserDTO getUserById1(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        return userMapper.toUserDTO(user.orElse(null));
     }
 
-    public UserDTO login(LoginDTO loginDTO) {
+
+
+    public ResponseEntity<UserDTO> login(LoginDTO loginDTO) {
         User user = userRepository.findByUsername(loginDTO.username()).orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (passwordEncoder.matches(CharBuffer.wrap(loginDTO.password()), user.getPassword())) {
             String token = userAuthProvider.createJWTToken(user);
             user.setToken(token);
+
             HttpHeaders headers = new HttpHeaders();
             headers.add("Authorization", "Bearer " + user.getToken());
-            User saved = userRepository.save(user);
-            return userMapper.toUserDTO(saved);
+            userRepository.save(user);
+            System.out.println("User saved: " + user);
+            System.out.println("User saved token: " + user.getToken());
+            System.out.println("Headers: " + headers);
+            System.out.println(userMapper.toUserDTO(user));
+            System.out.println("ResponseEntity: " + new ResponseEntity<>(userMapper.toUserDTO(user), headers, HttpStatus.OK));
+            return new ResponseEntity<>(userMapper.toUserDTO(user), headers, HttpStatus.OK);
         } else {
             throw new UserNotFoundException("User not found");
         }
     }
 
-    public UserDTO register(SignupDTO signUpDTO) {
+    public UserDTO register1(SignupDTO signUpDTO) {
         Optional<User> user = userRepository.findByUsername(signUpDTO.username());
 
         if (user.isPresent())  {
@@ -152,23 +181,38 @@ public class UserServices {
 
         User userEntity = new User();
         userEntity.setUsername(signUpDTO.username());
-        userEntity.setName(signUpDTO.name());
-        userEntity.setSurname(signUpDTO.surname());
-        userEntity.setDateOfBirth(signUpDTO.dateOfBirth());
         userEntity.setEmail(signUpDTO.email());
-        userEntity.setFaculty(signUpDTO.faculty());
-        userEntity.setProfileDescription(signUpDTO.profileDescription());
-
         userEntity.setPassword(passwordEncoder.encode(CharBuffer.wrap(signUpDTO.password())));
-
-        User savedUser = userRepository.save(userEntity);
-        String token = userAuthProvider.createJWTToken(savedUser);
-        savedUser.setToken(token);
-        User updatedUser = userRepository.save(savedUser);
+        String token = userAuthProvider.createJWTToken(userEntity);
+        userEntity.setToken(token);
+        User updatedUser = userRepository.save(userEntity);
 
 
         return userMapper.toUserDTO(updatedUser);
     }
+
+    public UserDTO register2(SignupDTO signUpDTO) {
+        Optional<User> user = userRepository.findByUsername(signUpDTO.username());
+
+        /*if (user.isPresent())  {
+            throw new DuplicateUsernameException("Username already exists", HttpStatus.BAD_REQUEST);
+        }*/
+
+        System.out.println("User: " + user);
+        //System.out.printf("Token" + user.getToken());
+
+        User userEntity = new User();
+        userEntity.setName(signUpDTO.name());
+        userEntity.setSurname(signUpDTO.surname());
+        userEntity.setDateOfBirth(signUpDTO.dateOfBirth());
+        userEntity.setFaculty(signUpDTO.faculty());
+        userEntity.setProfileDescription(signUpDTO.profileDescription());
+
+        userRepository.save(userEntity);
+        return userMapper.toUserDTO(userEntity);
+    }
+
+
 
     public List<User> findUsersByCommonInterests(User user) {
         Set<Interest> userInterests = user.getInterests();
@@ -180,5 +224,11 @@ public class UserServices {
                     return Long.compare(commonInterests2, commonInterests1);
                 })
                 .collect(Collectors.toList());
+    }
+
+    public Long getUserIdByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+        System.out.println("User: " + user.getId());
+        return user.getId();
     }
 }

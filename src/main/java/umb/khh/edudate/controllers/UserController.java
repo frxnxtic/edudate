@@ -50,8 +50,18 @@ public class UserController {
         return "userRating";
     }
 
+    @GetMapping("/user/{username}")
+    public ResponseEntity<Long> getUserIdByUsername(@PathVariable String username) {
+        Long userId = userService.getUserIdByUsername(username);
+        if (userId != null) {
+            return ResponseEntity.ok(userId);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<User> getRandomUser(@PathVariable Long id) {
+    public ResponseEntity<User> getUser(@PathVariable Long id) {
         User randomUser = userService.getUserById(id);
         if (randomUser != null) {
             return ResponseEntity.ok(randomUser);
@@ -113,6 +123,7 @@ public class UserController {
         User likedUser = userService.likeUser(id, likedUserId);
         return ResponseEntity.ok(likedUser);
     }
+
 
     @GetMapping("/{userId}/matches")
     public ResponseEntity<List<User>> getMatchingUsers(@PathVariable Long userId) {

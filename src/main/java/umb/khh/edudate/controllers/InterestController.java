@@ -3,6 +3,7 @@ package umb.khh.edudate.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import umb.khh.edudate.dto.UserDTO;
 import umb.khh.edudate.entity.Interest;
 import umb.khh.edudate.entity.User;
 import umb.khh.edudate.services.UserServices;
@@ -21,7 +22,7 @@ public class InterestController {
         this.userService = userService;
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/get/{userId}")
     public ResponseEntity<Set<Interest>> getUserInterests(@PathVariable Long userId) {
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -30,9 +31,9 @@ public class InterestController {
         return ResponseEntity.ok(user.getInterests());
     }
 
-    @PostMapping("/{userId}")
+    @PostMapping("/set/{userId}")
     public ResponseEntity<String> setUserInterests(@PathVariable Long userId, @RequestBody Set<Interest> interests) {
-        User user = userService.getUserById(userId);
+        UserDTO user = userService.getUserById1(userId);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }

@@ -36,7 +36,7 @@ public class User {
     @Column(name = "city")
     private String city;
     @Column(name = "likes")
-    private short like;
+    private short likes;
     @Column(name = "faculta")
     private String faculty;
     @Column(name = "description")
@@ -62,7 +62,7 @@ public class User {
     private Set<User> likedBy;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<Image> images;
+    private Set<Image> image;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Matching> matchings = new HashSet<>();

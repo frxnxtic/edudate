@@ -1,7 +1,11 @@
 package umb.khh.edudate.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +39,25 @@ public class ImageController {
     public ImageController(UserServices userService, ImageService imageService) {
         this.userService = userService;
         this.imageService = imageService;
+    }
+
+    @GetMapping("/{name}")
+    public ResponseEntity<Resource> getImage(@PathVariable String name) {
+        try {
+            Path file = Paths.get(UPLOAD_DIR).resolve(name);
+            Resource resource = new UrlResource(file.toUri());
+
+            if (resource.exists() || resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; name=\"" + resource.getFilename() + "\"")
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_JPEG_VALUE)
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException e) {
+            return (ResponseEntity<Resource>) ResponseEntity.notFound();
+        }
     }
 
     @PostMapping("/upload/{userId}")
@@ -75,7 +99,7 @@ public class ImageController {
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(user.getImages());
+        return ResponseEntity.ok(user.getImage());
 
     }
 }

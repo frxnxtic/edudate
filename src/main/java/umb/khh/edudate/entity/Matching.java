@@ -17,15 +17,15 @@ import java.sql.Time;
 public class Matching {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "matched_user_id", nullable = false)
-    private User matchedUser;
+    @Column(name = "matched_user_id", nullable = false)
+    private Long matchedUserId;
 
     @Column(name = "seen")
     private boolean seen;

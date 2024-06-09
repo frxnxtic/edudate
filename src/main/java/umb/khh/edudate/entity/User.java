@@ -5,10 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import umb.khh.edudate.entity.enums.Interest;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Date;
+import java.util.*;
 
 @Getter
 @Setter
@@ -47,19 +46,11 @@ public class User {
     @Column(name = "dislikes")
     private int dislikes;
 
-    //@Column(name = "interests")
+
     @ElementCollection(targetClass = Interest.class)
     @Enumerated(EnumType.STRING)
-    private Set<Interest> interests = new HashSet<>();
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_likes",
-            joinColumns = @JoinColumn(name = "liked_user_id"),
-            inverseJoinColumns = @JoinColumn(name = "liker_user_id")
-    )
-
-    private Set<User> likedBy;
+    @Column(name = "interests")
+    private List<Interest> interests = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Image> images;
@@ -67,7 +58,16 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Matching> matchings = new HashSet<>();
 
+    public List<Interest> getInterests() {
+        return interests;
+    }
+
+    public void setInterests(List<Interest> interests) {
+        this.interests = interests;
+    }
 }
+
+
 
 
 

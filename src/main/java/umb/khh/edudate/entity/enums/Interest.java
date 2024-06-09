@@ -1,4 +1,4 @@
-package umb.khh.edudate.entity;
+package umb.khh.edudate.entity.enums;
 
 public enum Interest {
     SPORT,

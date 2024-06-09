@@ -3,7 +3,7 @@ package umb.khh.edudate.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import umb.khh.edudate.entity.Interest;
+import umb.khh.edudate.entity.enums.Interest;
 import umb.khh.edudate.entity.Matching;
 import umb.khh.edudate.entity.User;
 import umb.khh.edudate.services.MatchingService;
@@ -17,12 +17,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/matching")
 public class MatchingController {
 
-    @Autowired
     private final MatchingService matchingService;
-
-    @Autowired
     private final UserServices userService;
 
+    @Autowired
     public MatchingController(MatchingService matchingService, UserServices userService) {
         this.matchingService = matchingService;
         this.userService = userService;
@@ -57,18 +55,10 @@ public class MatchingController {
 
     // Метод для подсчета количества общих интересов между двумя пользователями
     private int calculateCommonInterests(User user1, User user2) {
-        int countInterest = 0;
-        Set<Interest> interests1 = user1.getInterests();
-        Set<Interest> interests2 = user2.getInterests();
-        for (Interest interest1 : interests1) {
-            for (Interest interest2 : interests2) {
-                if (interest1 == interest2) {
-                    countInterest++;
-                    break;
-                }
-            }
-        }
-        return countInterest;
+        Set<Interest> interests1 = (Set<Interest>) user1.getInterests();
+        Set<Interest> interests2 = (Set<Interest>) user2.getInterests();
+        interests1.retainAll(interests2);
+        return interests1.size();
     }
 
     @PostMapping("/create")

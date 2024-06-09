@@ -1,6 +1,6 @@
 package umb.khh.edudate.dto;
 
-import umb.khh.edudate.entity.Interest;
+import umb.khh.edudate.entity.enums.Interest;
 
 import java.util.Date;
 import java.util.Set;

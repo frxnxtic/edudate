@@ -7,22 +7,23 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
+import umb.khh.edudate.NotificationService;
 import umb.khh.edudate.dto.LoginDTO;
 import umb.khh.edudate.dto.SignupDTO;
-import umb.khh.edudate.entity.Interest;
+import umb.khh.edudate.entity.enums.Interest;
 import umb.khh.edudate.entity.User;
 import org.springframework.stereotype.Service;
 import umb.khh.edudate.dto.UserDTO;
+import umb.khh.edudate.entity.UserLike;
 import umb.khh.edudate.exception.DuplicateUsernameException;
+import umb.khh.edudate.exception.LikeAlreadyExistsException;
 import umb.khh.edudate.exception.UserNotFoundException;
+import umb.khh.edudate.repositories.UserLikeRepository;
 import umb.khh.edudate.repositories.UserRepository;
 import umb.khh.edudate.security.AuthProvider;
 
 import java.nio.CharBuffer;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +41,13 @@ public class UserServices {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserLikeRepository userLikeRepository;
+
+    @Autowired
+    private NotificationService notificationService; // Добавьте это, если отсутствует
+
 
     public UserServices(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -92,20 +100,6 @@ public class UserServices {
         return allUsers.get(randomIndex);
     }
 
-    public Set<User> getUsersWhoLikedMe(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return user.getLikedBy();
-    }
-
-    public User likeUser(Long likerId, Long likedUserId) {
-        User liker = userRepository.findById(likerId).orElseThrow(() -> new UserNotFoundException("Liker not found"));
-        User likedUser = userRepository.findById(likedUserId).orElseThrow(() -> new UserNotFoundException("Liked user not found"));
-
-        likedUser.getLikedBy().add(liker);
-        userRepository.save(likedUser);
-
-        return likedUser;
-    }
 
     public User getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
@@ -170,8 +164,10 @@ public class UserServices {
         return userMapper.toUserDTO(updatedUser);
     }
 
-    public List<User> findUsersByCommonInterests(User user) {
-        Set<Interest> userInterests = user.getInterests();
+    public List<User> findUsersByCommonInterests(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        Set<Interest> userInterests = new HashSet<>(user.getInterests());
+
         return userRepository.findAll().stream()
                 .filter(otherUser -> !otherUser.getId().equals(user.getId()))
                 .sorted((u1, u2) -> {
@@ -180,5 +176,53 @@ public class UserServices {
                     return Long.compare(commonInterests2, commonInterests1);
                 })
                 .collect(Collectors.toList());
+    }
+
+
+    public void likeUser(Long likerUserId, Long likedUserId) {
+        if (userLikeRepository.existsByLikerUserIdAndLikedUserId(likerUserId, likedUserId)) {
+            throw new LikeAlreadyExistsException("Like already exists from user " + likerUserId + " to user " + likedUserId);
+        }
+
+        UserLike userLike = new UserLike();
+        userLike.setLikerUserId(likerUserId);
+        userLike.setLikedUserId(likedUserId);
+        userLikeRepository.save(userLike);
+
+        if (userLikeRepository.existsByLikerUserIdAndLikedUserId(likedUserId, likerUserId)) {
+            notificationService.notifyUser(likerUserId, "You have a new match with user " + likedUserId);
+            notificationService.notifyUser(likedUserId, "You have a new match with user " + likerUserId);
+        } else {
+            notificationService.notifyUser(likedUserId, "You have a new like from user " + likerUserId);
+        }
+    }
+
+    public List<User> getUserLikes(Long userId) {
+        List<UserLike> userLikes = userLikeRepository.findByLikerUserId(userId);
+        List<User> likedUsers = new ArrayList<>();
+        for (UserLike userLike : userLikes) {
+            likedUsers.add(userRepository.findById(userLike.getLikedUserId()).orElseThrow(() -> new UserNotFoundException("User not found: " + userLike.getLikedUserId())));
+        }
+        return likedUsers;
+    }
+
+    public List<User> getUsersWhoLikedMe(Long userId) {
+        List<UserLike> userLikes = userLikeRepository.findByLikedUserId(userId);
+        List<User> usersWhoLikedMe = new ArrayList<>();
+        for (UserLike userLike : userLikes) {
+            usersWhoLikedMe.add(userRepository.findById(userLike.getLikerUserId()).orElseThrow(() -> new UserNotFoundException("User not found: " + userLike.getLikerUserId())));
+        }
+        return usersWhoLikedMe;
+    }
+
+    public void updateInterests(Long userId, List<Interest> interestNames) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        user.setInterests(interestNames);
+        userRepository.save(user);
+    }
+
+    public List<Interest> getInterests(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        return user.getInterests();
     }
 }

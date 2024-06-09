@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import {Link, useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import backImage from '../back.jpg';
 
 const RegisterPageContainer = styled.div`
@@ -55,23 +55,78 @@ const RegisterPage = () => {
         setPassword(event.target.value);
     };
 
+    const fetchUserId = async (username) => {
+        const response = await fetch(`http://localhost:8080/api/user/${username}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.log('Failed to fetch user data');
+            return null;
+        }
+    };
+
     const handleEmailChange = (event) => {
-        setEmail(event.target.value);
+        const email = event.target.value;
+        setEmail(email);
+
+        // Regular expression to check if email ends with @student.umb.sk or @umb.sk
+        const emailRegex = /@(student\.)?umb\.sk$/;
+
+        // Set emailError state based on whether the email does NOT match the regex
+        setEmailError(!emailRegex.test(email));
     };
 
     const navigate = useNavigate();
     const handleSubmit = async (event) => {
         event.preventDefault();
-        // Проверяем, что все поля заполнены
-        if (!username || !password || !email) {
+
+        // Check that all fields are filled and email is valid
+        if (!username || !password || !email || emailError) {
             setUsernameError(!username);
             setPasswordError(!password);
-            setEmailError(!email);
+            setEmailError(!email || emailError);
             return;
         }
-        // Здесь можно добавить логику для отправки данных на сервер
-        console.log('Submitting register form...');
-        navigate('/secondregister');
+
+        // Prepare the form data
+        const formData = {
+            username: username,
+            password: password,
+            email: email
+        };
+
+        // Make a POST request to the backend
+        const response = await fetch('http://localhost:8080/api/auth/signup-1', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        // Check if the request was successful
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('username', username);
+
+            // Fetch user ID
+            const userId = await fetchUserId(username);
+            localStorage.setItem('id', userId);
+
+            console.log('Registration successful');
+            navigate('/secondregister');
+        } else {
+            console.log('Registration failed');
+        }
     };
 
     return (
@@ -86,7 +141,7 @@ const RegisterPage = () => {
                     required={true}
                     onChange={handleUsernameChange}
                     margin="normal"
-                    error={usernameError} // Устанавливаем состояние ошибки
+                    error={usernameError}
                 />
                 <TextField
                     required={true}
@@ -96,7 +151,7 @@ const RegisterPage = () => {
                     value={password}
                     onChange={handlePasswordChange}
                     margin="normal"
-                    error={passwordError} // Устанавливаем состояние ошибки
+                    error={passwordError}
                 />
                 <TextField
                     required={true}
@@ -108,12 +163,12 @@ const RegisterPage = () => {
                     margin="normal"
                     error={emailError}
                 />
-                { // Выводим текст ошибки, если поле не заполнено
+                {
                     (usernameError || passwordError || emailError) && (
                         <ErrorText>All fields are required</ErrorText>
                     )
                 }
-                <Button type="submit" variant="contained" color="primary" onSubmit={handleSubmit}>
+                <Button type="submit" variant="contained" color="primary">
                     Register
                 </Button>
                 Already have an account? <Link to="/login">Login</Link>

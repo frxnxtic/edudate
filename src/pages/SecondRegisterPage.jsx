@@ -35,48 +35,74 @@ const RegisterFormTitle = styled.h1`
 
 const RegisterPage = () => {
     const [faculty, setFaculty] = useState('FPV');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [birthdate, setBirthdate] = useState('');
+    const [name, setName] = useState('');
+    const [surname, setSurname] = useState('');
+    const [dob, setDob] = useState('');
     const [facultyError, setFacultyError] = useState(false);
     const [firstNameError, setFirstNameError] = useState(false);
     const [lastNameError, setLastNameError] = useState(false);
     const [birthdateError, setBirthdateError] = useState(false);
-
-
 
     const handleFacultyChange = (event) => {
         setFaculty(event.target.value);
     };
 
     const handleFirstNameChange = (event) => {
-        setFirstName(event.target.value);
+        setName(event.target.value);
     };
 
     const handleLastNameChange = (event) => {
-        setLastName(event.target.value);
+        setSurname(event.target.value);
     };
 
     const handleBirthdateChange = (event) => {
-        setBirthdate(event.target.value);
+        setDob(event.target.value);
     };
 
     const navigate = useNavigate();
     const handleSubmit = async (event) => {
         event.preventDefault();
+
         // Проверяем, что все поля заполнены
-        if (!firstName || !lastName || !faculty || !birthdate) {
-            setFirstNameError(!firstName);
-            setLastNameError(!lastName);
+        if (!name || !surname || !faculty || !dob) {
+            setFirstNameError(!name);
+            setLastNameError(!surname);
             setFacultyError(!faculty);
-            setBirthdateError(!birthdate);
+            setBirthdateError(!dob);
             return;
         }
-        // Здесь можно добавить логику для отправки данных на сервер
-        console.log('Submitting register form...');
-        navigate('/registerTest');
-    };
 
+        // Готовим данные формы
+        const formData = {
+            username: localStorage.getItem('username'),
+            name: name,
+            surname: surname,
+            faculty: faculty,
+            dob: dob
+        };
+
+        console.log('Form Data:', formData); // Отладочная информация
+
+        // Выполняем POST запрос к серверу
+        const response = await fetch('http://localhost:8080/api/auth/signup-2', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        // Проверяем успешность запроса
+        if (response.ok) {
+            console.log('Регистрация успешна');
+            navigate('/uploadimage');
+        } else {
+            console.log('Ошибка регистрации');
+            const errorData = await response.json();
+            console.log('Ошибка:', errorData); // Выводим подробности ошибки
+        }
+    };
 
     return (
         <RegisterPageContainer>
@@ -88,7 +114,7 @@ const RegisterPage = () => {
                     type="text"
                     label="First Name"
                     variant="outlined"
-                    value={firstName}
+                    value={name}
                     onChange={handleFirstNameChange}
                     margin="normal"
                     error={firstNameError}
@@ -98,7 +124,7 @@ const RegisterPage = () => {
                     type="text"
                     label="Last Name"
                     variant="outlined"
-                    value={lastName}
+                    value={surname}
                     onChange={handleLastNameChange}
                     margin="normal"
                     error={lastNameError}
@@ -107,7 +133,7 @@ const RegisterPage = () => {
                     required
                     select
                     label="Faculty"
-                    defaultValue="Engineering"
+                    defaultValue="FPV"
                     value={faculty}
                     onChange={handleFacultyChange}
                     variant="outlined"
@@ -124,14 +150,17 @@ const RegisterPage = () => {
                 <TextField
                     required
                     type="date"
-                    label=""
+                    label="Date of Birth"
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
                     variant="outlined"
-                    value={birthdate}
+                    value={dob}
                     onChange={handleBirthdateChange}
                     margin="normal"
                     error={birthdateError}
                 />
-                <Button type="submit" variant="contained" color="primary" onSubmit={handleSubmit}>
+                <Button type="submit" variant="contained" color="primary">
                     Register
                 </Button>
             </RegisterForm>

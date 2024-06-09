@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import {Link} from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import backImage from '../back.jpg';
 
 const LoginPageContainer = styled.div`
@@ -36,6 +36,7 @@ const LoginFormTitle = styled.h1`
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
     const handleUsernameChange = (event) => {
         setUsername(event.target.value);
@@ -45,10 +46,28 @@ const LoginPage = () => {
         setPassword(event.target.value);
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        // Здесь можно добавить логику для отправки данных на сервер
-        console.log('Submitting login form...');
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                navigate('/match');
+            } else {
+                console.error('Login failed');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     return (
@@ -71,7 +90,7 @@ const LoginPage = () => {
                     onChange={handlePasswordChange}
                     margin="normal"
                 />
-                <Button type="submit" variant="contained" color="primary" component={Link} to={"/match"} >
+                <Button type="submit" variant="contained" color="primary">
                     Login
                 </Button>
                 Do not have an account? <a href="/register">Register</a>

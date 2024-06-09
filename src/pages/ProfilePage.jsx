@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import styled, {createGlobalStyle} from 'styled-components';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import backImage from '../back.jpg';
-import {Link} from "react-router-dom"; // Предположим, что у вас есть фоновое изображение
+import { Link } from "react-router-dom";
+const GlobalStyle = createGlobalStyle`
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        width: 100%;
+        height: 100%;
+    }
+`;
 const Header = styled.div`
     width: 100%;
     display: flex;
@@ -11,6 +20,7 @@ const Header = styled.div`
     align-items: center;
     padding: 20px;
 `;
+
 const Logo = styled.h1`
     margin: 0;
     font-size: 36px;
@@ -23,6 +33,7 @@ const Logo = styled.h1`
     margin: -10px;
     letter-spacing: 5px;
 `;
+
 const ButtonContainer = styled.div`
     margin-top: 20px;
     display: flex;
@@ -36,8 +47,8 @@ const PageContainer = styled.div`
     align-items: center;
     min-height: 100vh;
     background-image: url(${backImage});
-    background-size: cover; /* Установите фоновое изображение в полный размер */
-    background-position: center; /* Центрируйте изображение по центру */
+    background-size: cover;
+    background-position: center;
 `;
 
 const ProfileForm = styled.form`
@@ -87,125 +98,118 @@ const Footer = styled.footer`
     height: 60px;
     background-color: rgb(51, 51, 51);
     color: #ffffff;
-   
 `;
 
 
-const ProfilePage = () => {
-    const initialUserData = {
-        username: 'example_username',
-        name: 'Example Name',
-        age: 25,
-        gender: 'Male',
-        faculty: 'Example Faculty',
-        image: 'https://via.placeholder.com/200', // URL изображения пользователя
-    };
+const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+};
 
-    const [userData, setUserData] = useState(initialUserData);
+const ProfilePage = () => {
+    const [userData, setUserData] = useState(null);
     const [editable, setEditable] = useState(false);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setUserData({ ...userData, [name]: value });
-    };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setEditable(true); // Завершаем редактирование при сохранении
-        // Отправляем данные на сервер
-        fetch('сюда_вставьте_ссылку_на_API_для_отправки_данных', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Данные успешно отправлены:', data);
-                // Добавьте здесь дополнительную логику или обновление состояния, если это необходимо
-            })
-            .catch(error => {
-                console.error('Ошибка при отправке данных:', error);
-                // Обработайте ошибку, если это необходимо
-            });
-    };
+    useEffect(() => {
+        const token = localStorage.getItem('token');
 
-    const handleEdit = () => {
-        setEditable(true); // Разрешаем редактирование при нажатии кнопки "Change"
-    };
+        const fetchData = async () => {
+
+            const id = localStorage.getItem('id');
+            try {
+                const response = await fetch(`http://localhost:8080/api/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                setUserData(data);
+            } catch (error) {
+                console.error('Error fetching data: ', error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+
+
+
+
+
+    if (!userData) {
+        return <p>Loading...</p>;
+    }
 
     return (
-        <PageContainer>
-            <Header>
-                <Logo>Edudate</Logo>
-                <ButtonContainer>
-                    <Button type="submit" variant="contained" color="primary" component={Link} to={"/match"} >
-                        Main
-                    </Button>
-                </ButtonContainer>
-            </Header>
-            <ProfileForm onSubmit={handleSubmit}>
-                <ProfileImage src={userData.image} alt={userData.username} />
-                {editable ? (
-                    <>
-                        <ProfileTextField
-                            label="Username"
-                            name="username"
-                            value={userData.username}
-                            onChange={handleChange}
-                            margin="normal"
-                            variant="outlined"
-                        />
-                        <ProfileTextField
-                            label="Name"
-                            name="name"
-                            value={userData.name}
-                            onChange={handleChange}
-                            margin="normal"
-                            variant="outlined"
-                        />
-                        <ProfileTextField
-                            label="Age"
-                            name="age"
-                            value={userData.age}
-                            onChange={handleChange}
-                            margin="normal"
-                            variant="outlined"
-                        />
-                        <ProfileTextField
-                            label="Gender"
-                            name="gender"
-                            value={userData.gender}
-                            onChange={handleChange}
-                            margin="normal"
-                            variant="outlined"
-                        />
-                        <ProfileTextField
-                            label="Faculty"
-                            name="faculty"
-                            value={userData.faculty}
-                            onChange={handleChange}
-                            margin="normal"
-                            variant="outlined"
-                        />
-                        <ActionButton type="submit">Save</ActionButton>
-                    </>
-                ) : (
-                    <>
-                        <p>Username: {userData.username}</p>
-                        <p>Name: {userData.name}</p>
-                        <p>Age: {userData.age}</p>
-                        <p>Gender: {userData.gender}</p>
-                        <p>Faculty: {userData.faculty}</p>
-                        <ActionButton onClick={handleEdit}>Change</ActionButton>
-                    </>
-                )}
-            </ProfileForm>
-            <Footer>
-                © 2024 Edudate. All rights reserved.
-            </Footer>
-        </PageContainer>
+        <>
+            <GlobalStyle />
+            <PageContainer>
+                <Header>
+                    <Logo>Edudate</Logo>
+                    <ButtonContainer>
+                        <Button type="submit" variant="contained" color="primary" component={Link} to={"/match"} >
+                            Main
+                        </Button>
+                    </ButtonContainer>
+                </Header>
+                <ProfileForm >
+                    <ProfileImage src={userData.image} alt={userData.username} />
+                    {editable ? (
+                        <>
+                            <ProfileTextField
+                                label="Username"
+                                name="username"
+                                value={userData.username}
+                                margin="normal"
+                                variant="outlined"
+                            />
+                            <ProfileTextField
+                                label="Name"
+                                name="name"
+                                value={userData.name}
+                                margin="normal"
+                                variant="outlined"
+                            />
+                            <ProfileTextField
+                                label="Date of Birth"
+                                name="dateOfBirth"
+                                value={userData.dateOfBirth}
+                                margin="normal"
+                                variant="outlined"
+                                type="date"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                            <ProfileTextField
+                                label="Faculty"
+                                name="faculty"
+                                value={userData.faculty}
+                                margin="normal"
+                                variant="outlined"
+                            />
+                            <ActionButton type="submit">Save</ActionButton>
+                        </>
+                    ) : (
+                        <>
+                            <p>Username: {userData.username}</p>
+                            <p>Name: {userData.name}</p>
+                            <p>Date of Birth: {formatDate(userData.dateOfBirth)}</p>
+                            <p>Faculty: {userData.faculty}</p>
+
+                        </>
+                    )}
+                </ProfileForm>
+                <Footer>
+                    © 2024 Edudate. All rights reserved.
+                </Footer>
+            </PageContainer>
+        </>
     );
 };
 

@@ -10,7 +10,7 @@ import ProfilePage from "./pages/ProfilePage";
 import StatisticsPage from "./pages/StatisticsPage";
 import LikeCount from "./pages/LikeCount";
 import LikeDislikeRatioBar from "./pages/LikeDislikeRatioBar";
-
+import UploadImagePage  from "./pages/UploadImagePage";
 const App = () => {
     return (
         <Router>
@@ -25,6 +25,7 @@ const App = () => {
                 <Route path="/statistics" element={<StatisticsPage />} />
                 <Route path="/likecounter" element={<LikeCount />} />
                 <Route path="/likedislikeratiobar" element={<LikeDislikeRatioBar />} />
+                <Route path="/uploadimage" element={<UploadImagePage />} />
             </Routes>
         </Router>
     );

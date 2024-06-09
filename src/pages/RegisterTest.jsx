@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import backImage from '../back.jpg';
-import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
 const TestPageContainer = styled.div`
@@ -65,99 +64,121 @@ const ErrorText = styled.p`
     margin-top: 10px;
 `;
 
+const NavigationButton = styled(Button)`
+    && {
+        margin: 10px;
+        width: 100px;
+    }
+`;
+
+const interests = [
+    'SPORT',
+    'MUSIC',
+    'TRAVEL',
+    'READING',
+    'ART',
+    'MOVIES',
+    'COOKING',
+    'PHOTOGRAPHY',
+    'FITNESS',
+    'TECHNOLOGY',
+    'FASHION',
+    'GAMING',
+    'NATURE',
+    'HISTORY',
+    'DIY',
+];
+
+const ITEMS_PER_PAGE = 4;
+
 const RegisterTest = () => {
-    const [interest1, setInterest1] = useState(false);
-    const [interest2, setInterest2] = useState(false);
-    const [interest3, setInterest3] = useState(false);
-    const [interest4, setInterest4] = useState(false);
-    const [interest5, setInterest5] = useState(false);
-    const [interest6, setInterest6] = useState(false);
+    const [selectedInterests, setSelectedInterests] = useState({});
     const [formError, setFormError] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
 
     const navigate = useNavigate();
+
+    const handleCheckboxChange = (interest) => {
+        setSelectedInterests((prev) => ({
+            ...prev,
+            [interest]: !prev[interest],
+        }));
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        // Считаем количество выбранных интересов
-        const selectedInterests = [interest1, interest2, interest3, interest4, interest5, interest6].filter(interest => interest);
+        const selectedCount = Object.values(selectedInterests).filter(Boolean).length;
 
-        // Проверяем, что выбрано как минимум два интереса
-        if (selectedInterests.length < 2) {
+        if (selectedCount < 2) {
             setFormError(true);
             return;
         }
 
-        // Здесь можно добавить логику для сохранения ответов на тест
+        // Save selected interests to the backend
+        const userId = localStorage.getItem('id');
+        const interestsArray = Object.keys(selectedInterests).filter(key => selectedInterests[key]);
 
-        // Перенаправляем пользователя на другую страницу после отправки ответов
-        navigate('/match');
+        try {
+            const response = await fetch(`http://localhost:8080/api/interests/set/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(interestsArray)
+            });
+
+            if (response.ok) {
+                console.log('Interests set successfully');
+                navigate('/match');
+            } else {
+                console.error('Failed to set interests');
+            }
+        } catch (error) {
+            console.error('Error setting interests:', error);
+        }
     };
+
+    const handleNextPage = () => {
+        if ((currentPage + 1) * ITEMS_PER_PAGE < interests.length) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 0) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const currentInterests = interests.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
     return (
         <TestPageContainer>
             <TestForm onSubmit={handleSubmit}>
                 <TestFormTitle>Interests Test</TestFormTitle>
-                <TestInputLabel>
-                    <TestCheckboxContainer>
-                        <input
-                            type="checkbox"
-                            checked={interest1}
-                            onChange={() => setInterest1(!interest1)}
-                        />
-                        <TestCheckboxLabel>Do you like sports?</TestCheckboxLabel>
-                    </TestCheckboxContainer>
-                </TestInputLabel>
-                <TestInputLabel>
-                    <TestCheckboxContainer>
-                        <input
-                            type="checkbox"
-                            checked={interest2}
-                            onChange={() => setInterest2(!interest2)}
-                        />
-                        <TestCheckboxLabel>Do you enjoy reading?</TestCheckboxLabel>
-                    </TestCheckboxContainer>
-                </TestInputLabel>
-                <TestInputLabel>
-                    <TestCheckboxContainer>
-                        <input
-                            type="checkbox"
-                            checked={interest3}
-                            onChange={() => setInterest3(!interest3)}
-                        />
-                        <TestCheckboxLabel>Are you interested in cooking?</TestCheckboxLabel>
-                    </TestCheckboxContainer>
-                </TestInputLabel>
-                <TestInputLabel>
-                    <TestCheckboxContainer>
-                        <input
-                            type="checkbox"
-                            checked={interest4}
-                            onChange={() => setInterest4(!interest4)}
-                        />
-                        <TestCheckboxLabel>Do you like traveling?</TestCheckboxLabel>
-                    </TestCheckboxContainer>
-                </TestInputLabel>
-                <TestInputLabel>
-                    <TestCheckboxContainer>
-                        <input
-                            type="checkbox"
-                            checked={interest5}
-                            onChange={() => setInterest5(!interest5)}
-                        />
-                        <TestCheckboxLabel>Are you into music?</TestCheckboxLabel>
-                    </TestCheckboxContainer>
-                </TestInputLabel>
-                <TestInputLabel>
-                    <TestCheckboxContainer>
-                        <input
-                            type="checkbox"
-                            checked={interest6}
-                            onChange={() => setInterest6(!interest6)}
-                        />
-                        <TestCheckboxLabel>Do you enjoy gardening?</TestCheckboxLabel>
-                    </TestCheckboxContainer>
-                </TestInputLabel>
+                {currentInterests.map((interest) => (
+                    <TestInputLabel key={interest}>
+                        <TestCheckboxContainer>
+                            <input
+                                type="checkbox"
+                                checked={!!selectedInterests[interest]}
+                                onChange={() => handleCheckboxChange(interest)}
+                            />
+                            <TestCheckboxLabel>Do you like {interest.toLowerCase()}?</TestCheckboxLabel>
+                        </TestCheckboxContainer>
+                    </TestInputLabel>
+                ))}
+                <div>
+                    <NavigationButton variant="contained" onClick={handlePrevPage} disabled={currentPage === 0}>
+                        Previous
+                    </NavigationButton>
+                    <NavigationButton variant="contained" onClick={handleNextPage} disabled={(currentPage + 1) * ITEMS_PER_PAGE >= interests.length}>
+                        Next
+                    </NavigationButton>
+                </div>
                 <SubmitButton variant="contained" color="primary" type="submit">
                     Submit
                 </SubmitButton>

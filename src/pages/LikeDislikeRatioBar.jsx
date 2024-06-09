@@ -3,11 +3,11 @@ import React from 'react';
 import styled from 'styled-components';
 
 const BarContainer = styled.div`
-  margin-top: 10px;
-  width: 100%;
-  height: 10px;
-  background-color: #ccc;
-  border-radius: 5px;
+    margin-top: 10px;
+    width: 100%;
+    height: 10px;
+    background-color: rgba(204, 204, 204, 0);
+    border-radius: 5px;
 `;
 
 const LikeBar = styled.div`

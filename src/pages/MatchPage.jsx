@@ -1,22 +1,33 @@
-import React from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import styled, { createGlobalStyle } from 'styled-components';
 import Button from '@material-ui/core/Button';
 import image from '../image.jpg';
 import { AiOutlineLike, AiOutlineDislike } from 'react-icons/ai';
-import {Link} from "react-router-dom"; // Добавляем импорт иконок
+import { Link } from "react-router-dom";
+
+// Global styles to restrict horizontal scrolling
+const GlobalStyle = createGlobalStyle`
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        width: 100%;
+        height: 100%;
+    }
+`;
 
 const PageContainer = styled.div`
     display: flex;
     flex-direction: column;
-    max-height: 100vh;
     justify-content: space-between;
     align-items: center;
     background-image: url(${image});
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-    width: auto;
+    width: 100vw;
     height: 100vh;
+    overflow: hidden;
 `;
 
 const Header = styled.div`
@@ -85,7 +96,6 @@ const UserData = styled.div`
 
 const Footer = styled.footer`
     width: 100%;
-    //padding: 20px;
     background-color: #333;
     color: #fff;
     text-align: center;
@@ -93,10 +103,9 @@ const Footer = styled.footer`
 
 const LikeButton = styled(Button)`
     && {
-        /* Стили для кнопки "Like" */
         position: absolute;
         top: 50%;
-        left: 450px; /* Изменяем позицию на левую сторону */
+        left: 450px;
         transform: translateY(-50%);
         border-radius: 50%;
         width: 60px;
@@ -111,10 +120,9 @@ const LikeButton = styled(Button)`
 
 const DislikeButton = styled(Button)`
     && {
-        /* Стили для кнопки "Dislike" */
         position: absolute;
         top: 50%;
-        right: 450px; /* Изменяем позицию на правую сторону */
+        right: 450px;
         transform: translateY(-50%);
         border-radius: 50%;
         width: 60px;
@@ -126,61 +134,111 @@ const DislikeButton = styled(Button)`
         align-items: center;
     }
 `;
+
 const LargeLikeIcon = styled(AiOutlineLike)`
-    font-size: 2rem; /* Размер иконки в 2 раза больше */
+    font-size: 2rem;
 `;
 
 const LargeDislikeIcon = styled(AiOutlineDislike)`
-    font-size: 2rem; /* Размер иконки в 2 раза больше */
+    font-size: 2rem;
 `;
 
 const MatchPage = () => {
-    // Данные пользователя (заглушки, вы можете заменить их на реальные данные из вашей базы данных)
-    const user = {
-        username: 'example_username',
-        name: 'Example Name',
-        age: 25,
-        gender: 'Male',
-        faculty: 'Example Faculty',
-        image: 'https://via.placeholder.com/350',
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                setError('No token found, please log in again.');
+                return;
+            }
+
+            try {
+                const id = localStorage.getItem('id');
+                const response = await fetch(`http://localhost:8080/api/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 403) {
+                    setError('Access forbidden: Invalid or expired token');
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error: ${errorData.message || response.statusText}`);
+                }
+
+                const result = await response.json();
+                setUser(result);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setError(`Error fetching data: ${error.message}`);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
+
+    if (!user) {
+        return <div>Loading...</div>;
+    }
+
+    const formatDate = (dateString) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
     };
 
     return (
-        <PageContainer>
-            <Header>
-                <Logo>Edudate</Logo>
-                <ButtonContainer>
-                    <Button type="submit" variant="contained" color="primary" component={Link} to={"/profile"} >
-                        Profile
-                    </Button>
-                    <Button type="submit" variant="contained" color="primary" component={Link} to={"/statistics"} >
-                        statistics
-                    </Button>
-                </ButtonContainer>
-            </Header>
-            <MatchCardContainer>
-                <MatchCard>
-                    <MatchName>{user.username}</MatchName>
-                    <MatchImage src={user.image} alt={user.username} />
-                    <UserData>
-                        <p>Name: {user.name}</p>
-                        <p>Age: {user.age}</p>
-                        <p>Gender: {user.gender}</p>
-                        <p>Faculty: {user.faculty}</p>
-                    </UserData>
-                    <LikeButton variant="contained" color="primary">
-                        <LargeLikeIcon />
-                    </LikeButton>
-                    <DislikeButton variant="contained" color="secondary">
-                        <LargeDislikeIcon />
-                    </DislikeButton>
-                </MatchCard>
-            </MatchCardContainer>
-            
-            <Footer>
-                © 2024 Edudate. All rights reserved.
-            </Footer>
-        </PageContainer>
+        <>
+            <GlobalStyle />
+            <PageContainer>
+                <Header>
+                    <Logo>Edudate</Logo>
+                    <ButtonContainer>
+                        <Button type="submit" variant="contained" color="primary" component={Link} to={"/profile"} >
+                            Profile
+                        </Button>
+                        <Button type="submit" variant="contained" color="primary" component={Link} to={"/statistics"} >
+                            Statistics
+                        </Button>
+                    </ButtonContainer>
+                </Header>
+                <MatchCardContainer>
+                    <MatchCard>
+                        <MatchName>{user.username}</MatchName>
+                        <MatchImage src={user.image} alt={user.username} />
+                        <UserData>
+                            <p>Name: {user.name} {user.surname}</p>
+                            <p>Date of Birth: {formatDate(user.dateOfBirth)}</p>
+                            <p>Interests: {user.interests}</p>
+                            <p>Faculty: {user.faculty}</p>
+                        </UserData>
+                        <LikeButton variant="contained" color="primary">
+                            <LargeLikeIcon />
+                        </LikeButton>
+                        <DislikeButton variant="contained" color="secondary">
+                            <LargeDislikeIcon />
+                        </DislikeButton>
+                    </MatchCard>
+                </MatchCardContainer>
+                <Footer>
+                    © 2024 Edudate. All rights reserved.
+                </Footer>
+            </PageContainer>
+        </>
     );
 };
 

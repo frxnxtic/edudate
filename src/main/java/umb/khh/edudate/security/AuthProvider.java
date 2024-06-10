@@ -2,6 +2,8 @@ package umb.khh.edudate.security;
 
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,7 @@ public class AuthProvider {
 
     public String createJWTToken(User user) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 36000000);
+        Date validity = new Date(now.getTime() + 360000000);
 
         System.out.println(JWT.create().
                 withIssuer(user.getUsername()).
@@ -49,20 +51,26 @@ public class AuthProvider {
     }
 
     public Authentication checkJWTToken(String token) {
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
-        JWTVerifier verifier = JWT.require(algorithm).build();
+            JWTVerifier verifier = JWT.require(algorithm).build();
 
-        DecodedJWT decodedJWT = verifier.verify(token);
+            DecodedJWT decodedJWT = verifier.verify(token);
 
-        String issuer = decodedJWT.getIssuer();
-        String[] parts = issuer.split(":");
+            String issuer = decodedJWT.getIssuer();
+            String[] parts = issuer.split(":");
 
-        UserDTO user = UserDTO.builder()
-                .username(parts[1]).
-                password(decodedJWT.getClaim("password").asString()).
-                build();
+            UserDTO user = UserDTO.builder()
+                    .username(parts[1]).
+                    password(decodedJWT.getClaim("password").asString()).
+                    build();
 
-        return new UsernamePasswordAuthenticationToken(user, null, null);
+            return new UsernamePasswordAuthenticationToken(user, null, null);
+        } catch (JWTDecodeException e) {
+            System.out.println("JWTDecodeException");
+            System.out.println("Token: " + token);
+            throw e;
+        }
     }
 }

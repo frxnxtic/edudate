@@ -50,13 +50,15 @@ public class MatchingController {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
+        System.out.println(Arrays.toString(sortedUsers.toArray()));
+
         return ResponseEntity.ok(sortedUsers);
     }
 
     // Метод для подсчета количества общих интересов между двумя пользователями
     private int calculateCommonInterests(User user1, User user2) {
-        Set<Interest> interests1 = (Set<Interest>) user1.getInterests();
-        Set<Interest> interests2 = (Set<Interest>) user2.getInterests();
+        List<Interest> interests1 =  user1.getInterests();
+        List<Interest> interests2 = user2.getInterests();
         interests1.retainAll(interests2);
         return interests1.size();
     }

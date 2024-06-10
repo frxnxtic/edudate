@@ -25,8 +25,14 @@ public class SecConfig {
                 .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) ->
                         requests.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/user").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/signup-1").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/signup-2").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/images/upload/").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/{userId}/interests").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/user/{username}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/matching/search/{userId}").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/matching/search/{userId}").authenticated()
                                 .anyRequest().authenticated()
                 );
         return http.build();

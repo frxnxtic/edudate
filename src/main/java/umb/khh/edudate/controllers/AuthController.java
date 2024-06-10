@@ -17,19 +17,23 @@ public class AuthController {
     @Autowired
     private UserServices service;
 
-    @Autowired
-    private AuthProvider auth;
 
 
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@RequestBody LoginDTO loginDTO) {
-        UserDTO user = service.login(loginDTO);
+        UserDTO user = service.login(loginDTO).getBody();
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<UserDTO> signup(@RequestBody SignupDTO userDTO) {
-        UserDTO user = service.register(userDTO);
+    @PostMapping("/signup-1")
+    public ResponseEntity<UserDTO> signup1(@RequestBody SignupDTO userDTO) {
+        UserDTO user = service.register1(userDTO);
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/signup-2")
+    public ResponseEntity<UserDTO> signup2(@RequestBody UserDTO userDTO) {
+        UserDTO user = service.updateUser(userDTO);
         return ResponseEntity.ok(user);
     }
 }

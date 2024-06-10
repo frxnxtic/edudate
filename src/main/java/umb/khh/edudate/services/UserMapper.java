@@ -9,6 +9,7 @@ import umb.khh.edudate.entity.User;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(source = "token", target = "token")
     UserDTO toUserDTO(User user);
 
 }

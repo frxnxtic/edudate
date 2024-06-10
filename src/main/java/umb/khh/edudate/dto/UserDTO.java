@@ -8,6 +8,7 @@ import java.util.Date;
 @Data
 public class UserDTO {
     private String username;
+    private String token;
     private String name;
     private String surname;
     private Date dateOfBirth;

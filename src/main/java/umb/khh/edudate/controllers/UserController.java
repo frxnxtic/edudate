@@ -43,6 +43,16 @@ public class UserController {
         return userService.createUser(user);
     }//кнопка подтверждающая регистрацию пользователя
 
+    @GetMapping("/user/{username}")
+    public ResponseEntity<Long> getUserIdByUsername(@PathVariable String username) {
+        Long userId = userService.getUserIdByUsername(username);
+        if (userId != null) {
+            return ResponseEntity.ok(userId);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/user")
     public String getUserForRating(Model model) {
         User userForRating = userService.findRandomUser();

@@ -26,9 +26,25 @@ public class MatchingController {
         this.matchingService = matchingService;
         this.userService = userService;
     }
+    @PostMapping("/{likerUserId}/like/{likedUserId}")
+    public ResponseEntity<String> likeUser(@PathVariable Long likerUserId, @PathVariable Long likedUserId) {
+        User likerUser = userService.getUserById(likerUserId);
+        User likedUser = userService.getUserById(likedUserId);
+
+        if (likerUser == null || likedUser == null) {
+            return ResponseEntity.badRequest().body("Invalid user ID(s)");
+        }
+
+        boolean isMatch = matchingService.likeUser(likerUserId, likedUserId);
+        if (isMatch) {
+            return ResponseEntity.ok("It's a match!");
+        } else {
+            return ResponseEntity.ok("User liked successfully");
+        }
+    }
 
     @GetMapping("/search/{userId}")
-    public ResponseEntity<List<User>> searchMatching(@PathVariable Long userId) {
+    public ResponseEntity<List<User>> searchPartner(@PathVariable Long userId) {
         User currentUser = userService.getUserById(userId);
         if (currentUser == null) {
             return ResponseEntity.notFound().build();
@@ -64,62 +80,5 @@ public class MatchingController {
         return interests1.size();
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Matching> createMatching(@RequestParam Long userId, @RequestParam Long matchedUserId, @RequestParam boolean liked) {
-        User user = userService.getUserById(userId);
-        User matchedUser = userService.getUserById(matchedUserId);
 
-        if (user == null || matchedUser == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Matching matching = matchingService.createMatching(userId, matchedUserId, liked);
-        return ResponseEntity.ok(matching);
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Matching>> getUserMatchings(@PathVariable Long userId) {
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        List<Matching> matchings = matchingService.getUserMatchings(user);
-        return ResponseEntity.ok(matchings);
-    }
-
-    @GetMapping("/matched-by/{userId}")
-    public ResponseEntity<List<Matching>> getUserMatchedBy(@PathVariable Long userId) {
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        List<Matching> matchedBy = matchingService.getUserMatchedBy(user);
-        return ResponseEntity.ok(matchedBy);
-    }
-
-    @PostMapping("/like/{userId}")
-    public ResponseEntity<Void> incrementLikeCount(@PathVariable Long userId) {
-        UserDTO user = userService.getUserById1(userId);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        user.setLikes((short) (user.getLikes() + 1));
-        userService.updateUser(user);
-
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/dislike/{userId}")
-    public ResponseEntity<Void> incrementDislikeCount(@PathVariable Long userId) {
-        UserDTO user = userService.getUserById1(userId);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        user.setDislikes(user.getDislikes() + 1);
-        userService.updateUser(user);
-
-        return ResponseEntity.ok().build();
-    }
 }

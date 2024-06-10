@@ -42,29 +42,14 @@ public class User {
     private String profileDescription;
     @Column(name = "social_links")
     private String social_links;
-//ДОБАВИТЬ КОЛОНКУ ДИЗЛАЙКОВ
     @Column(name = "dislikes")
     private int dislikes;
-
 
     @ElementCollection(targetClass = Interest.class)
     @Enumerated(EnumType.STRING)
     @Column(name = "interests")
     private List<Interest> interests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<Image> images;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Matching> matchings = new HashSet<>();
-
-    public List<Interest> getInterests() {
-        return interests;
-    }
-
-    public void setInterests(List<Interest> interests) {
-        this.interests = interests;
-    }
 }
 
 

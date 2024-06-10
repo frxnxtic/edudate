@@ -7,7 +7,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.RequestBody;
 import umb.khh.edudate.NotificationService;
 import umb.khh.edudate.dto.LoginDTO;
 import umb.khh.edudate.dto.SignupDTO;
@@ -15,11 +14,11 @@ import umb.khh.edudate.entity.enums.Interest;
 import umb.khh.edudate.entity.User;
 import org.springframework.stereotype.Service;
 import umb.khh.edudate.dto.UserDTO;
-import umb.khh.edudate.entity.UserLike;
+import umb.khh.edudate.entity.UserLikes;
 import umb.khh.edudate.exception.DuplicateUsernameException;
 import umb.khh.edudate.exception.LikeAlreadyExistsException;
 import umb.khh.edudate.exception.UserNotFoundException;
-import umb.khh.edudate.repositories.UserLikeRepository;
+import umb.khh.edudate.repositories.UserLikesRepository;
 import umb.khh.edudate.repositories.UserRepository;
 import umb.khh.edudate.security.AuthProvider;
 
@@ -44,7 +43,7 @@ public class UserServices {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private UserLikeRepository userLikeRepository;
+    private UserLikesRepository userLikeRepository;
 
     @Autowired
     private NotificationService notificationService; // Добавьте это, если отсутствует
@@ -204,7 +203,7 @@ public class UserServices {
             throw new LikeAlreadyExistsException("Like already exists from user " + likerUserId + " to user " + likedUserId);
         }
 
-        UserLike userLike = new UserLike();
+        UserLikes userLike = new UserLikes();
         userLike.setLikerUserId(likerUserId);
         userLike.setLikedUserId(likedUserId);
         userLikeRepository.save(userLike);
@@ -218,9 +217,9 @@ public class UserServices {
     }
 
     public List<User> getUserLikes(Long userId) {
-        List<UserLike> userLikes = userLikeRepository.findByLikerUserId(userId);
+        List<UserLikes> userLikes = userLikeRepository.findByLikerUserId(userId);
         List<User> likedUsers = new ArrayList<>();
-        for (UserLike userLike : userLikes) {
+        for (UserLikes userLike : userLikes) {
             likedUsers.add(userRepository.findById(userLike.getLikedUserId()).orElseThrow(() -> new UserNotFoundException("User not found: " + userLike.getLikedUserId())));
         }
         return likedUsers;
@@ -288,9 +287,9 @@ public class UserServices {
     }
 
     public List<User> getUsersWhoLikedMe(Long userId) {
-        List<UserLike> userLikes = userLikeRepository.findByLikedUserId(userId);
+        List<UserLikes> userLikes = userLikeRepository.findByLikedUserId(userId);
         List<User> usersWhoLikedMe = new ArrayList<>();
-        for (UserLike userLike : userLikes) {
+        for (UserLikes userLike : userLikes) {
             usersWhoLikedMe.add(userRepository.findById(userLike.getLikerUserId()).orElseThrow(() -> new UserNotFoundException("User not found: " + userLike.getLikerUserId())));
         }
         return usersWhoLikedMe;

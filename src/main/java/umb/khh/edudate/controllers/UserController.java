@@ -96,26 +96,15 @@ public ResponseEntity<User> getUserById(@PathVariable Long userId) {
 //    }
 
 
-     
-
-    @GetMapping("/users/{id}/likes")
-    public ResponseEntity<Set<User>> getUsersWhoLikedMe(@PathVariable Long id) {
-        Set<User> likedByUsers = userService.getUsersWhoLikedMe(id);
-        return ResponseEntity.ok(likedByUsers);
-    }
-
-    @PostMapping("/users/{id}/like")
-    public ResponseEntity<User> likeUser(@PathVariable Long id, @RequestParam Long likedUserId) {
-        User likedUser = userService.likeUser(id, likedUserId);
-        return ResponseEntity.ok(likedUser);
-    }
-
-
-    @GetMapping("/{userId}/matches")
-    public ResponseEntity<List<User>> getMatchingUsers(@PathVariable Long userId) {
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
+    @PostMapping("/{likedUserId}/like")
+    public ResponseEntity<Void> likeUser(@RequestParam Long likerUserId, @PathVariable Long likedUserId) {
+        try {
+            userService.likeUser(likerUserId, likedUserId);
+            return ResponseEntity.ok().build();
+        } catch (LikeAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

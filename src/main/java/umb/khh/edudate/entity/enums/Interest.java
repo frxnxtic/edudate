@@ -1,4 +1,4 @@
-package umb.khh.edudate.entity;
+package umb.khh.edudate.entity.enums;
 
 public enum Interest {
     SPORT,
@@ -9,7 +9,7 @@ public enum Interest {
     MOVIES,
     COOKING,
     PHOTOGRAPHY,
-    FITNES,
+    FITNESS,
     TECHNOLOGY,
     FASHION,
     GAMING,

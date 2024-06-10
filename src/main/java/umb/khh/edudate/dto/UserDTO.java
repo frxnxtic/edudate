@@ -10,9 +10,9 @@ import java.util.Set;
 @Data
 public class UserDTO {
     private String username;
+    private String token;
     private String name;
     private String surname;
-    private String token;
     private Date dateOfBirth;
     private String email;
     private String password;

@@ -12,4 +12,5 @@ public interface UserMapper {
     @Mapping(source = "likes", target = "likes")
     UserDTO toUserDTO(User user);
 
+
 }

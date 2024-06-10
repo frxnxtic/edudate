@@ -13,9 +13,6 @@ import java.util.Calendar;
 @SpringBootApplication
 public class EduDateApplication{
 
-    @Autowired
-    private UserServices userServices;
-
     public static void main(String[] args) {
         SpringApplication.run(EduDateApplication.class, args);
     }

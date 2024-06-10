@@ -9,20 +9,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import umb.khh.edudate.dto.LoginDTO;
 import umb.khh.edudate.dto.SignupDTO;
-import umb.khh.edudate.entity.Interest;
+import umb.khh.edudate.entity.enums.Interest;
 import umb.khh.edudate.entity.User;
 import org.springframework.stereotype.Service;
 import umb.khh.edudate.dto.UserDTO;
+import umb.khh.edudate.entity.UserLikes;
 import umb.khh.edudate.exception.DuplicateUsernameException;
+import umb.khh.edudate.exception.LikeAlreadyExistsException;
 import umb.khh.edudate.exception.UserNotFoundException;
+import umb.khh.edudate.repositories.UserLikesRepository;
 import umb.khh.edudate.repositories.UserRepository;
 import umb.khh.edudate.security.AuthProvider;
 
 import java.nio.CharBuffer;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +40,13 @@ public class UserServices {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserLikesRepository userLikeRepository;
+
+    @Autowired
+    private NotificationService notificationService; // Добавьте это, если отсутствует
+
 
     public UserServices(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -124,32 +131,91 @@ public class UserServices {
         return allUsers.get(randomIndex);
     }
 
-    public Set<User> getUsersWhoLikedMe(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return user.getLikedBy();
-    }
-
-    public User likeUser(Long likerId, Long likedUserId) {
-        User liker = userRepository.findById(likerId).orElseThrow(() -> new UserNotFoundException("Liker not found"));
-        User likedUser = userRepository.findById(likedUserId).orElseThrow(() -> new UserNotFoundException("Liked user not found"));
-
-        likedUser.getLikedBy().add(liker);
-        userRepository.save(likedUser);
-
-        return likedUser;
-    }
 
     public User getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
         return user.orElse(null);
     }
 
+    public UserDTO updateUser(UserDTO userDTO) {
+        System.out.println(userRepository.findByUsername(userDTO.getUsername()).stream().findFirst());
+        User user = userRepository.findByUsername(userDTO.getUsername()).stream().findFirst().orElseThrow(() -> new UserNotFoundException("User not found with id: "  + userDTO.getUsername()));
+
+        // Update user details if the new value is not null
+        if (userDTO.getName() != null) {
+            user.setName(userDTO.getName());
+        }
+        if (userDTO.getSurname() != null) {
+            user.setSurname(userDTO.getSurname());
+        }
+        if (userDTO.getDateOfBirth() != null) {
+            System.out.println("Date of birth: " + userDTO.getDateOfBirth());
+            user.setDateOfBirth(userDTO.getDateOfBirth());
+        }
+        if (userDTO.getFaculty() != null) {
+            user.setFaculty(userDTO.getFaculty());
+        }
+        if (userDTO.getProfileDescription() != null) {
+            user.setProfileDescription(userDTO.getProfileDescription());
+        }
+        if (userDTO.getLikes() != 0) {
+            user.setLikes(userDTO.getLikes());
+        }
+        if (userDTO.getDislikes() != 0) {
+            user.setDislikes(userDTO.getDislikes());
+        }
+
+        // Save updated user to the database
+        User updatedUser = userRepository.save(user);
     public UserDTO getUserById1(Long id) {
         Optional<User> user = userRepository.findById(id);
         return userMapper.toUserDTO(user.orElse(null));
     }
 
 
+
+
+    public List<User> findUsersByCommonInterests(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        Set<Interest> userInterests = new HashSet<>(user.getInterests());
+
+        return userRepository.findAll().stream()
+                .filter(otherUser -> !otherUser.getId().equals(user.getId()))
+                .sorted((u1, u2) -> {
+                    long commonInterests1 = u1.getInterests().stream().filter(userInterests::contains).count();
+                    long commonInterests2 = u2.getInterests().stream().filter(userInterests::contains).count();
+                    return Long.compare(commonInterests2, commonInterests1);
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public void likeUser(Long likerUserId, Long likedUserId) {
+        if (userLikeRepository.existsByLikerUserIdAndLikedUserId(likerUserId, likedUserId)) {
+            throw new LikeAlreadyExistsException("Like already exists from user " + likerUserId + " to user " + likedUserId);
+        }
+
+        UserLikes userLike = new UserLikes();
+        userLike.setLikerUserId(likerUserId);
+        userLike.setLikedUserId(likedUserId);
+        userLikeRepository.save(userLike);
+
+        if (userLikeRepository.existsByLikerUserIdAndLikedUserId(likedUserId, likerUserId)) {
+            notificationService.notifyUser(likerUserId, "You have a new match with user " + likedUserId);
+            notificationService.notifyUser(likedUserId, "You have a new match with user " + likerUserId);
+        } else {
+            notificationService.notifyUser(likedUserId, "You have a new like from user " + likerUserId);
+        }
+    }
+
+    public List<User> getUserLikes(Long userId) {
+        List<UserLikes> userLikes = userLikeRepository.findByLikerUserId(userId);
+        List<User> likedUsers = new ArrayList<>();
+        for (UserLikes userLike : userLikes) {
+            likedUsers.add(userRepository.findById(userLike.getLikedUserId()).orElseThrow(() -> new UserNotFoundException("User not found: " + userLike.getLikedUserId())));
+        }
+        return likedUsers;
+    }
 
     public ResponseEntity<UserDTO> login(LoginDTO loginDTO) {
         User user = userRepository.findByUsername(loginDTO.username()).orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -212,23 +278,34 @@ public class UserServices {
         return userMapper.toUserDTO(userEntity);
     }
 
+    public List<User> getUsersWhoLikedMe(Long userId) {
+        List<UserLikes> userLikes = userLikeRepository.findByLikedUserId(userId);
+        List<User> usersWhoLikedMe = new ArrayList<>();
+        for (UserLikes userLike : userLikes) {
+            usersWhoLikedMe.add(userRepository.findById(userLike.getLikerUserId()).orElseThrow(() -> new UserNotFoundException("User not found: " + userLike.getLikerUserId())));
+        }
+        return usersWhoLikedMe;
+    }
 
+    public void updateInterests(Long userId, List<Interest> interestNames) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        user.setInterests(interestNames);
+        userRepository.save(user);
+    }
 
-    public List<User> findUsersByCommonInterests(User user) {
-        Set<Interest> userInterests = user.getInterests();
-        return userRepository.findAll().stream()
-                .filter(otherUser -> !otherUser.getId().equals(user.getId()))
-                .sorted((u1, u2) -> {
-                    long commonInterests1 = u1.getInterests().stream().filter(userInterests::contains).count();
-                    long commonInterests2 = u2.getInterests().stream().filter(userInterests::contains).count();
-                    return Long.compare(commonInterests2, commonInterests1);
-                })
-                .collect(Collectors.toList());
+    public List<Interest> getInterests(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        return user.getInterests();
     }
 
     public Long getUserIdByUsername(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
         System.out.println("User: " + user.getId());
         return user.getId();
+    }
+
+    public UserDTO getUserById1(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+        return userMapper.toUserDTO(user);
     }
 }

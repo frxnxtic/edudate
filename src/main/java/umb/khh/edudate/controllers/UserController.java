@@ -53,6 +53,16 @@ public class UserController {
         }
     }
 
+    @GetMapping("/{userId}")
+public ResponseEntity<User> getUserById(@PathVariable Long userId) {
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
+    }
+
+
     @GetMapping("/user")
     public String getUserForRating(Model model) {
         User userForRating = userService.findRandomUser();

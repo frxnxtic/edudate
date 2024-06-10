@@ -107,11 +107,6 @@ public class UserServices {
         return user.orElse(null);
     }
 
-    public UserDTO getUserById1 (Long id) {
-        Optional<User> user = userRepository.findById(id);
-        return UserMapper.toUserDTO(user.orElse(null));
-    }
-
     public UserDTO updateUser(UserDTO userDTO) {
         System.out.println(userRepository.findByUsername(userDTO.getUsername()).stream().findFirst());
         User user = userRepository.findByUsername(userDTO.getUsername()).stream().findFirst().orElseThrow(() -> new UserNotFoundException("User not found with id: "  + userDTO.getUsername()));
@@ -124,6 +119,7 @@ public class UserServices {
             user.setSurname(userDTO.getSurname());
         }
         if (userDTO.getDateOfBirth() != null) {
+            System.out.println("Date of birth: " + userDTO.getDateOfBirth());
             user.setDateOfBirth(userDTO.getDateOfBirth());
         }
         if (userDTO.getFaculty() != null) {
@@ -132,12 +128,18 @@ public class UserServices {
         if (userDTO.getProfileDescription() != null) {
             user.setProfileDescription(userDTO.getProfileDescription());
         }
+        if (userDTO.getLikes() != 0) {
+            user.setLikes(userDTO.getLikes());
+        }
+        if (userDTO.getDislikes() != 0) {
+            user.setDislikes(userDTO.getDislikes());
+        }
 
         // Save updated user to the database
         User updatedUser = userRepository.save(user);
 
         // Convert updated user entity to DTO and return
-        return UserMapper.toUserDTO(null);
+        return userMapper.toUserDTO(updatedUser);
     }
 
 //    public UserDTO login(LoginDTO loginDTO) {
@@ -237,9 +239,9 @@ public class UserServices {
             System.out.println("User saved: " + user);
             System.out.println("User saved token: " + user.getToken());
             System.out.println("Headers: " + headers);
-            System.out.println(UserMapper.toUserDTO(user));
-            System.out.println("ResponseEntity: " + new ResponseEntity<>(UserMapper.toUserDTO(user), headers, HttpStatus.OK));
-            return new ResponseEntity<>(UserMapper.toUserDTO(user), headers, HttpStatus.OK);
+            System.out.println(userMapper.toUserDTO(user));
+            System.out.println("ResponseEntity: " + new ResponseEntity<>(userMapper.toUserDTO(user), headers, HttpStatus.OK));
+            return new ResponseEntity<>(userMapper.toUserDTO(user), headers, HttpStatus.OK);
         } else {
             throw new UserNotFoundException("User not found");
         }
@@ -261,7 +263,7 @@ public class UserServices {
         User updatedUser = userRepository.save(userEntity);
 
 
-        return UserMapper.toUserDTO(updatedUser);
+        return userMapper.toUserDTO(updatedUser);
     }
 
     public UserDTO register2(SignupDTO signUpDTO) {
@@ -282,7 +284,7 @@ public class UserServices {
         userEntity.setProfileDescription(signUpDTO.profileDescription());
 
         userRepository.save(userEntity);
-        return UserMapper.toUserDTO(userEntity);
+        return userMapper.toUserDTO(userEntity);
     }
 
     public List<User> getUsersWhoLikedMe(Long userId) {
@@ -309,5 +311,10 @@ public class UserServices {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
         System.out.println("User: " + user.getId());
         return user.getId();
+    }
+
+    public UserDTO getUserById1(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+        return userMapper.toUserDTO(user);
     }
 }

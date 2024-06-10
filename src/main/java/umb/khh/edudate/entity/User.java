@@ -35,7 +35,7 @@ public class User {
     @Column(name = "city")
     private String city;
     @Column(name = "likes")
-    private short like;
+    private short likes;
     @Column(name = "faculta")
     private String faculty;
     @Column(name = "description")

@@ -30,9 +30,11 @@ public class SecConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/images/upload/").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/{userId}/interests").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/user/{username}").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/matching/search/{userId}").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/matching/search/{userId}").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/{userId}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/matching/search/{userId}").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/matching/search/{userId}").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/matching/like/{userId}").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/matching/dislike/{userId}").permitAll()
                                 .anyRequest().authenticated()
                 );
         return http.build();

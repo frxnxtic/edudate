@@ -9,7 +9,7 @@ public enum Interest {
     MOVIES,
     COOKING,
     PHOTOGRAPHY,
-    FITNES,
+    FITNESS,
     TECHNOLOGY,
     FASHION,
     GAMING,

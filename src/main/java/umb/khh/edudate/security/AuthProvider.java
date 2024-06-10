@@ -31,7 +31,7 @@ public class AuthProvider {
 
     public String createJWTToken(User user) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3600000);
+        Date validity = new Date(now.getTime() + 36000000);
 
         System.out.println(JWT.create().
                 withIssuer(user.getUsername()).

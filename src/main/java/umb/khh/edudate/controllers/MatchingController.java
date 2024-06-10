@@ -97,8 +97,8 @@ public class MatchingController {
         return ResponseEntity.ok(matchedBy);
     }
 
-    @PostMapping("/incrementLikeCount")
-    public ResponseEntity<Void> incrementLikeCount(@RequestParam Long userId) {
+    @PostMapping("/like/{userId}")
+    public ResponseEntity<Void> incrementLikeCount(@PathVariable Long userId) {
         UserDTO user = userService.getUserById1(userId);
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -110,8 +110,8 @@ public class MatchingController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/incrementDislikeCount")
-    public ResponseEntity<Void> incrementDislikeCount(@RequestParam Long userId) {
+    @PostMapping("/dislike/{userId}")
+    public ResponseEntity<Void> incrementDislikeCount(@PathVariable Long userId) {
         UserDTO user = userService.getUserById1(userId);
         if (user == null) {
             return ResponseEntity.notFound().build();

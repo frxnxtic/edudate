@@ -10,6 +10,8 @@ import umb.khh.edudate.entity.User;
 public interface UserMapper {
 
     @Mapping(source = "token", target = "token")
-    UserDTO toUserDTO(User user);
+    static UserDTO toUserDTO(User user) {
+        return null;
+    }
 
 }

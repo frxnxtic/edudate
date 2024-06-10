@@ -11,6 +11,8 @@ public class UserDTO {
     private String token;
     private String name;
     private String surname;
+    private short likes;
+    private int dislikes;
     private Date dateOfBirth;
     private String email;
     private String password;

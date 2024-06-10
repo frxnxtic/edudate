@@ -107,6 +107,11 @@ public class UserServices {
         return user.orElse(null);
     }
 
+    public UserDTO getUserById1 (Long id) {
+        Optional<User> user = userRepository.findById(id);
+        return UserMapper.toUserDTO(user.orElse(null));
+    }
+
     public UserDTO updateUser(UserDTO userDTO) {
         System.out.println(userRepository.findByUsername(userDTO.getUsername()).stream().findFirst());
         User user = userRepository.findByUsername(userDTO.getUsername()).stream().findFirst().orElseThrow(() -> new UserNotFoundException("User not found with id: "  + userDTO.getUsername()));
@@ -132,7 +137,7 @@ public class UserServices {
         User updatedUser = userRepository.save(user);
 
         // Convert updated user entity to DTO and return
-        return userMapper.toUserDTO(null);
+        return UserMapper.toUserDTO(null);
     }
 
 //    public UserDTO login(LoginDTO loginDTO) {
@@ -232,9 +237,9 @@ public class UserServices {
             System.out.println("User saved: " + user);
             System.out.println("User saved token: " + user.getToken());
             System.out.println("Headers: " + headers);
-            System.out.println(userMapper.toUserDTO(user));
-            System.out.println("ResponseEntity: " + new ResponseEntity<>(userMapper.toUserDTO(user), headers, HttpStatus.OK));
-            return new ResponseEntity<>(userMapper.toUserDTO(user), headers, HttpStatus.OK);
+            System.out.println(UserMapper.toUserDTO(user));
+            System.out.println("ResponseEntity: " + new ResponseEntity<>(UserMapper.toUserDTO(user), headers, HttpStatus.OK));
+            return new ResponseEntity<>(UserMapper.toUserDTO(user), headers, HttpStatus.OK);
         } else {
             throw new UserNotFoundException("User not found");
         }
@@ -256,7 +261,7 @@ public class UserServices {
         User updatedUser = userRepository.save(userEntity);
 
 
-        return userMapper.toUserDTO(updatedUser);
+        return UserMapper.toUserDTO(updatedUser);
     }
 
     public UserDTO register2(SignupDTO signUpDTO) {
@@ -277,7 +282,7 @@ public class UserServices {
         userEntity.setProfileDescription(signUpDTO.profileDescription());
 
         userRepository.save(userEntity);
-        return userMapper.toUserDTO(userEntity);
+        return UserMapper.toUserDTO(userEntity);
     }
 
     public List<User> getUsersWhoLikedMe(Long userId) {

@@ -3,6 +3,7 @@ package umb.khh.edudate.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import umb.khh.edudate.dto.UserDTO;
 import umb.khh.edudate.entity.enums.Interest;
 import umb.khh.edudate.entity.Matching;
 import umb.khh.edudate.entity.User;
@@ -57,7 +58,7 @@ public class MatchingController {
 
     // Метод для подсчета количества общих интересов между двумя пользователями
     private int calculateCommonInterests(User user1, User user2) {
-        List<Interest> interests1 =  user1.getInterests();
+        List<Interest> interests1 = user1.getInterests();
         List<Interest> interests2 = user2.getInterests();
         interests1.retainAll(interests2);
         return interests1.size();
@@ -94,5 +95,31 @@ public class MatchingController {
         }
         List<Matching> matchedBy = matchingService.getUserMatchedBy(user);
         return ResponseEntity.ok(matchedBy);
+    }
+
+    @PostMapping("/incrementLikeCount")
+    public ResponseEntity<Void> incrementLikeCount(@RequestParam Long userId) {
+        UserDTO user = userService.getUserById1(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        user.setLikes((short) (user.getLikes() + 1));
+        userService.updateUser(user);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/incrementDislikeCount")
+    public ResponseEntity<Void> incrementDislikeCount(@RequestParam Long userId) {
+        UserDTO user = userService.getUserById1(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        user.setDislikes(user.getDislikes() + 1);
+        userService.updateUser(user);
+
+        return ResponseEntity.ok().build();
     }
 }

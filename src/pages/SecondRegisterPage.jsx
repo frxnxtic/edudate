@@ -4,6 +4,7 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import {useNavigate} from 'react-router-dom';
 import backImage from '../back.jpg';
+import moment from "moment";
 
 const RegisterPageContainer = styled.div`
     width: 100%;
@@ -72,13 +73,16 @@ const RegisterPage = () => {
             return;
         }
 
+        const dobFormatted = moment(dob).format('YYYY-MM-DD');
+        console.log('Date of Birth:', dobFormatted); // Отладочная информация
+
         // Готовим данные формы
         const formData = {
             username: localStorage.getItem('username'),
             name: name,
             surname: surname,
             faculty: faculty,
-            dob: dob
+            dob: dobFormatted
         };
 
         console.log('Form Data:', formData); // Отладочная информация

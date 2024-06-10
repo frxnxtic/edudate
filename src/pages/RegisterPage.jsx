@@ -102,32 +102,45 @@ const RegisterPage = () => {
             email: email
         };
 
-        // Make a POST request to the backend
-        const response = await fetch('http://localhost:8080/api/auth/signup-1', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
+        try {
+            // Make a POST request to the backend
+            const response = await fetch('http://localhost:8080/api/auth/signup-1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
 
-        // Check if the request was successful
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('username', username);
+            // Check if the request was successful
+            if (response.ok) {
+                console.log('Registration successful');
+                const responseText = await response.text();
 
-            // Fetch user ID
-            const userId = await fetchUserId(username);
-            localStorage.setItem('id', userId);
+                // Log response text to debug if it's not a valid JSON
+                console.log('Response Text:', responseText);
 
-            console.log('Registration successful');
-            navigate('/secondregister');
-        } else {
-            console.log('Registration failed');
+                // Parse the response text to JSON only if it's not empty
+                const data = responseText ? JSON.parse(responseText) : {};
+                console.log(data);
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', username);
+
+                // Fetch user ID
+                const userId = await fetchUserId(username);
+                localStorage.setItem('id', userId);
+
+                console.log('Registration successful');
+                navigate('/secondregister');
+            } else {
+                console.log('Registration failed');
+            }
+        } catch (error) {
+            console.error('Error:', error);
         }
     };
+
 
     return (
         <RegisterPageContainer>

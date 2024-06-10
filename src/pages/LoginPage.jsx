@@ -38,6 +38,23 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
+    const fetchUserId = async (username) => {
+        const response = await fetch(`http://localhost:8080/api/user/${username}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.log('Failed to fetch user data');
+            return null;
+        }
+    };
+
     const handleUsernameChange = (event) => {
         setUsername(event.target.value);
     };
@@ -61,6 +78,9 @@ const LoginPage = () => {
             if (response.ok) {
                 const data = await response.json();
                 localStorage.setItem('token', data.token);
+                const userId = await fetchUserId(username);
+                localStorage.setItem('id', userId);
+                localStorage.setItem('name', data.name);
                 navigate('/match');
             } else {
                 console.error('Login failed');

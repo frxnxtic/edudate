@@ -69,21 +69,21 @@ const UploadImagePage = () => {
         formData.append('file', selectedImage);
 
         // Get userId from local storage
-        const id = localStorage.getItem('id');
+        const userId = localStorage.getItem('id');
 
-        // Make a POST request to the backend
-        const response = await fetch(`http://localhost:8080/api/images/upload/${id}`, {
+        // Make a POST request to the backend with userId as a query parameter
+        const response = await fetch(`http://localhost:8080/api/ftp?userId=${userId}`, {
             method: 'POST',
             body: formData
         });
 
         // Check if the request was successful
         if (response.ok) {
-            localStorage.setItem('name', response.name);
             console.log('Image upload successful');
             navigate('/registerTest');
         } else {
             console.log('Image upload failed');
+            navigate('/registerTest');
         }
     };
 

@@ -4,6 +4,7 @@ import Button from '@material-ui/core/Button';
 import image from '../image.jpg';
 import { AiOutlineLike, AiOutlineDislike } from 'react-icons/ai';
 import { Link } from "react-router-dom";
+import {skSK} from "@material-ui/core/locale";
 
 // Global styles to restrict horizontal scrolling
 const GlobalStyle = createGlobalStyle`
@@ -94,6 +95,21 @@ const UserData = styled.div`
     text-align: center;
 `;
 
+const InterestList = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+`;
+
+const InterestItem = styled.span`
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin: 2px;
+    white-space: nowrap;
+`;
+
 const Footer = styled.footer`
     width: 100%;
     background-color: #333;
@@ -144,9 +160,25 @@ const LargeDislikeIcon = styled(AiOutlineDislike)`
 `;
 
 const MatchPage = () => {
-    const [user, setUser] = useState(null);
+    const [users, setUsers] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [error, setError] = useState(null);
+    const fetchUserId = async (username) => {
+        const response = await fetch(`http://localhost:8080/api/user/${username}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
 
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.log('Failed to fetch user data');
+            return null;
+        }
+    };
     useEffect(() => {
         const fetchData = async () => {
             const token = localStorage.getItem('token');
@@ -158,7 +190,7 @@ const MatchPage = () => {
 
             try {
                 const id = localStorage.getItem('id');
-                const response = await fetch(`http://localhost:8080/api/${id}`, {
+                const response = await fetch(`http://localhost:8080/api/matching/search/${id}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -178,28 +210,107 @@ const MatchPage = () => {
                 }
 
                 const result = await response.json();
-                setUser(result);
+                setUsers(result);
             } catch (error) {
                 console.error('Error fetching data:', error);
                 setError(`Error fetching data: ${error.message}`);
             }
         };
 
-        fetchData();
+        fetchData().then(r => r).catch(e => e);
     }, []);
+
+    const handleLike = async () => {
+        const token = localStorage.getItem('token');
+        const user = users[currentIndex];
+
+        if (!token) {
+            setError('No token found, please log in again.');
+            return;
+        }
+
+        try {
+            const username = user.username
+            const userId = await fetchUserId(username);
+            const response = await fetch(`http://localhost:8080/api/user-likes/like/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 403) {
+                setError('Access forbidden: Invalid or expired token');
+                return;
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Error: ${errorData.message || response.statusText}`);
+            }
+
+            setCurrentIndex((prevIndex) => (prevIndex + 1) % users.length);
+        } catch (error) {
+            console.error('Error liking user:', error);
+            setError(`Error liking user: ${error.message}`);
+        }
+    };
+
+    const handleDislike = async () => {
+        const token = localStorage.getItem('token');
+        const user = users[currentIndex];
+
+        if (!token) {
+            setError('No token found, please log in again.');
+            return;
+        }
+
+        try {
+            const username = user.username
+            const userId = await fetchUserId(username);
+            console.log(userId)
+            const response = await fetch(`http://localhost:8080/api/user-likes/dislike/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 403) {
+                setError('Access forbidden: Invalid or expired token');
+                return;
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Error: ${errorData.message || response.statusText}`);
+            }
+
+            setCurrentIndex((prevIndex) => (prevIndex + 1) % users.length);
+        } catch (error) {
+            console.error('Error liking user:', error);
+            setError(`Error liking user: ${error.message}`);
+        }
+    };
 
     if (error) {
         return <div>Error: {error}</div>;
     }
 
-    if (!user) {
+    if (users.length === 0) {
         return <div>Loading...</div>;
     }
 
+    const currentUser = users[currentIndex];
+
     const formatDate = (dateString) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString(undefined, options);
+        return new Date(dateString).toLocaleDateString("sk-sk", options);
     };
+
+    const interests = Array.isArray(currentUser.interests) ? currentUser.interests : currentUser.interests.split(',').map(interest => interest.trim());
 
     return (
         <>
@@ -216,20 +327,25 @@ const MatchPage = () => {
                         </Button>
                     </ButtonContainer>
                 </Header>
+                {error && <div style={{ color: 'red', marginBottom: '20px' }}>{error}</div>}
                 <MatchCardContainer>
                     <MatchCard>
-                        <MatchName>{user.username}</MatchName>
-                        <MatchImage src={user.image} alt={user.username} />
+                        <MatchName>{currentUser.username}</MatchName>
+                        <MatchImage src={currentUser.image} alt={currentUser.username} />
                         <UserData>
-                            <p>Name: {user.name} {user.surname}</p>
-                            <p>Date of Birth: {formatDate(user.dateOfBirth)}</p>
-                            <p>Interests: {user.interests}</p>
-                            <p>Faculty: {user.faculty}</p>
+                            <p>Name: {currentUser.name} {currentUser.surname}</p>
+                            <p>Date of Birth: {formatDate(currentUser.dateOfBirth)}</p>
+                            <InterestList>
+                                {interests.map((interest, index) => (
+                                    <InterestItem key={index}>{interest}</InterestItem>
+                                ))}
+                            </InterestList>
+                            <p>Faculty: {currentUser.faculty}</p>
                         </UserData>
-                        <LikeButton variant="contained" color="primary">
+                        <LikeButton variant="contained" color="primary" onClick={handleLike}>
                             <LargeLikeIcon />
                         </LikeButton>
-                        <DislikeButton variant="contained" color="secondary">
+                        <DislikeButton variant="contained" color="secondary" onClick={handleDislike}>
                             <LargeDislikeIcon />
                         </DislikeButton>
                     </MatchCard>

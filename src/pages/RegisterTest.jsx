@@ -120,7 +120,7 @@ const RegisterTest = () => {
         const interestsArray = Object.keys(selectedInterests).filter(key => selectedInterests[key]);
 
         try {
-            const response = await fetch(`http://localhost:8080/api/interests/set/${userId}`, {
+            const response = await fetch(`http://localhost:8080/api/${userId}/interests`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
